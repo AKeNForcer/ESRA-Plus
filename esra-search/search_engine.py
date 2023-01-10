@@ -12,8 +12,8 @@ warnings.filterwarnings("ignore")
 
 load_dotenv()
 DEVICE = os.environ['DEVICE']
-BM25_SIZE = os.environ['BM25_SIZE']
-GPL_TSDAE_SIZE = os.environ['GPL_TSDAE_SIZE']
+BM25_SIZE = int(os.environ['BM25_SIZE'])
+GPL_TSDAE_SIZE = int(os.environ['GPL_TSDAE_SIZE'])
 
 
 
