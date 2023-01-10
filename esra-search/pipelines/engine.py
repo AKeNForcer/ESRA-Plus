@@ -25,7 +25,8 @@ class ESRAEngine:
                 }
             },
             _source=False, 
-            fields=["id", "categories", "title", "abstract"]
+            fields=["id", "categories", "title", "abstract"],
+            size=size
         )["hits"]["hits"]
 
         return [dict(rank=i+1, **x) for i, x in enumerate(sorted([ {
