@@ -13,7 +13,7 @@ class CrossEncoderReranker:
         self.main_es = Elasticsearch(["tcp://172.18.0.2:9200"], basic_auth=("elastic", "esra_CP44"),)
         self.model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', device=device)
     
-    def search_paper(self, retrived_papers):
+    def search_paper(self, retrived_papers, size):
         return self.main_es.search(
             index="papers", 
             query={
@@ -25,7 +25,8 @@ class CrossEncoderReranker:
                 }
             },
             _source=False, 
-            fields=["id", "title", "abstract"]
+            fields=["id", "title", "abstract"],
+            size=size
         )["hits"]["hits"]
 
     def cross_encoder_rerank(self, query, retrived_papers, size, from_pipeline):
@@ -61,9 +62,6 @@ class CrossEncoderReranker:
                 })
 
         es_res = self.search_paper(retrived_papers)
-        # print(self.retrivers)
-        # print(retrived_papers)
-        # print([x['fields'] for x in es_res])
         return self.cross_encoder_rerank(query, [x['fields'] for x in es_res], size, from_pipeline)
         
 
@@ -93,6 +91,5 @@ class ThreadCrossEncoderReranker(CrossEncoderReranker):
                         "rank": rank+1,
                         "score": p[1],
                     })
-        
-        es_res = self.search_paper(retrived_papers)
+        es_res = self.search_paper(retrived_papers, size)
         return self.cross_encoder_rerank(query, [x['fields'] for x in es_res], size, from_pipeline)
