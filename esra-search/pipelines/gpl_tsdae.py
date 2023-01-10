@@ -1,4 +1,3 @@
-from search_eval_utils.es_utils import EmbeddedVectorES
 from sentence_transformers import SentenceTransformer
 
 from .gpl.gpl.toolkit.sbert import load_sbert
@@ -9,7 +8,7 @@ from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
 from beir.retrieval import models
 import json
 
-class GPL_TSDAE(PipelineTemplate):
+class GPL_TSDAE:
     def __init__(
         self,
         index_name="gpl-tsdae-embedded", 

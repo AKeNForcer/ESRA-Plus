@@ -7,10 +7,11 @@ class CrossEncoderReranker:
     def __init__(
         self, 
         retrivers,
+        device='cuda'
     ):
         self.retrivers = retrivers
         self.main_es = Elasticsearch(["tcp://172.18.0.2:9200"], basic_auth=("elastic", "esra_CP44"),)
-        self.model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+        self.model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', device=device)
     
     def search_paper(self, retrived_papers):
         return self.main_es.search(
@@ -68,8 +69,8 @@ class CrossEncoderReranker:
 
 
 class ThreadCrossEncoderReranker(CrossEncoderReranker):
-    def __init__(self, retrivers):
-        super().__init__(retrivers)
+    def __init__(self, retrivers, device='cuda'):
+        super().__init__(retrivers, device)
 
     def _retrive(self, query, retriver):
         return retriver["retriver"].eval(query, retriver["size"])
