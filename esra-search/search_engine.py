@@ -30,7 +30,7 @@ class FullCrossEncoderReranker(ThreadCrossEncoderReranker):
 
 
 bm25, gpl_tsdae = BM25(), GPL_TSDAE(device=DEVICE)
-cer = FullCrossEncoderReranker(bm25, 20, gpl_tsdae, 20, device=DEVICE)
+cer = FullCrossEncoderReranker(bm25, BM25_SIZE, gpl_tsdae, GPL_TSDAE_SIZE, device=DEVICE)
 engine = ESRAEngine(cer)
 
 
