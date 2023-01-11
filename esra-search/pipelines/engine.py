@@ -10,8 +10,8 @@ class ESRAEngine:
         self.main_es = Elasticsearch(es_url, basic_auth=es_auth)
 
     def search(self, query, size=10, shift = 0):
-        eval_result = self.pipeline.eval(query, size + shift)
-        papers_id = [x[0] for x in eval_result[shift:]]
+        eval_result = self.pipeline.eval(query, size + shift)[shift:]
+        papers_id = [x[0] for x in eval_result]
         score_by_papers_id = {x[0]: x[1:] for x in eval_result}
 
         es_res = self.main_es.search(

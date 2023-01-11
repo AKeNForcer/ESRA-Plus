@@ -8,7 +8,7 @@ from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
 from beir.retrieval import models
 import json
 
-class GPL_TSDAE:
+class GplTsdae:
     def __init__(
         self,
         index_name="gpl-tsdae-embedded", 
@@ -69,4 +69,4 @@ class GPL_TSDAE:
         temp['title'], temp['text'] = '', corpus
         real_corpus['0_corpus'] = temp
         return self.dres.search(real_corpus, real_query, top_k, score_function)['0_query']['0_corpus']
-        #return self.retriever.retrieve(real_corpus, real_query)
+
