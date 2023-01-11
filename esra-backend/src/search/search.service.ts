@@ -32,7 +32,7 @@ export class SearchService {
                 this.searchResultModel.deleteMany({ query })
             ]);
             const expire_date = new Date((new Date()).getTime() + this.searchResultExpireDuration);
-            await this.searchResultModel.insertMany(searchResult.map((x) => ({expire_date, ...x}) ))
+            await this.searchResultModel.insertMany(searchResult.map((x) => ({expire_date, query, ...x}) ))
         }
         return this.searchResultModel.find({ query }, { 
             _id: 0,

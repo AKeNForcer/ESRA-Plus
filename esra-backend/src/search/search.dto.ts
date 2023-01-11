@@ -20,6 +20,6 @@ export class SearchDTO {
   limit: number;
 
   @IsOptional()
-  @Transform(({ value }) => (value === 'true' || value == 1))
+  @Transform(({ value }) => ((value == 'true' || value == 1) ?? false))
   no_cache: boolean;
 }

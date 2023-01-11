@@ -13,6 +13,6 @@ export class SearchController {
         skip = skip | 0;
         limit = limit | 1;
         const result = await this.searchService.search(query, no_cache, limit, skip)
-        return responseJson("search success", result);
+        return responseJson(`search success "${query}"`, result);
     }
 }
