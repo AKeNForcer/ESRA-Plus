@@ -33,7 +33,7 @@ class CrossEncoderReranker:
         corpus = [x['abstract'][0] for x in retrived_papers]
         sentence_combinations = [[query, corpus_sentence] for corpus_sentence in corpus]
         similarity_scores = self.model.predict(sentence_combinations)
-        sim_scores_argsort = reversed(np.argsort(similarity_scores))
+        sim_scores_argsort = np.argsort(similarity_scores)[::-1]
         
         result = []
         for idx in sim_scores_argsort:
@@ -61,7 +61,7 @@ class CrossEncoderReranker:
                     "score": p[1],
                 })
 
-        es_res = self.search_paper(retrived_papers)
+        es_res = self.search_paper(retrived_papers, sum([retriver["size"] for retriver in self.retrivers]))
         return self.cross_encoder_rerank(query, [x['fields'] for x in es_res], size, from_pipeline)
         
 
@@ -91,5 +91,5 @@ class ThreadCrossEncoderReranker(CrossEncoderReranker):
                         "rank": rank+1,
                         "score": p[1],
                     })
-        es_res = self.search_paper(retrived_papers, size)
+        es_res = self.search_paper(retrived_papers, sum([retriver["size"] for retriver in self.retrivers]))
         return self.cross_encoder_rerank(query, [x['fields'] for x in es_res], size, from_pipeline)

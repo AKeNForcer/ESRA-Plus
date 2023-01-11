@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { SearchModule } from './search/search.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { PaperModule } from './paper/paper.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { MongooseModule } from '@nestjs/mongoose';
       })
     }),
     ConfigModule.forRoot(),
-    SearchModule
+    SearchModule,
+    PaperModule
   ],
   controllers: [AppController],
   providers: [AppService],
