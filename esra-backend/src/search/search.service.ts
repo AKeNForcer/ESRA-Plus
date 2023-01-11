@@ -28,16 +28,22 @@ export class SearchService {
         const resCount = await this.searchResultModel.count({ query, expire_date: { $gt: new Date() } });
         if(no_cache || resCount < this.searchEngineResultLimit) {
             const [searchResult, _] = await Promise.all([
-                this.search_using_search_engine(query),
+                this.searchUsingSearchEngine(query),
                 this.searchResultModel.deleteMany({ query })
             ]);
             const expire_date = new Date((new Date()).getTime() + this.searchResultExpireDuration);
             await this.searchResultModel.insertMany(searchResult.map((x) => ({expire_date, ...x}) ))
         }
-        return this.searchResultModel.find({ query }, { _id: 0 }).sort({ rank: 1 }).skip(skip).limit(limit)
+        return this.searchResultModel.find({ query }, { 
+            _id: 0,
+            id: 1,
+            rank: 1,
+            title: 1,
+            categories: 1,
+        }).sort({ rank: 1 }).skip(skip).limit(limit)
     }
 
-    async search_using_search_engine(query: string) {
+    async searchUsingSearchEngine(query: string) {
         const { data } = await firstValueFrom(
             this.httpService.get(this.searchUrl, {
                 params: {
