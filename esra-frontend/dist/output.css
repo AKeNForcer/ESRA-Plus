@@ -651,6 +651,11 @@ video {
   border-color: rgb(209 213 219 / var(--tw-border-opacity));
 }
 
+.bg-white {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+}
+
 .bg-transparent {
   background-color: transparent;
 }
@@ -658,11 +663,6 @@ video {
 .bg-red-200 {
   --tw-bg-opacity: 1;
   background-color: rgb(254 202 202 / var(--tw-bg-opacity));
-}
-
-.bg-white {
-  --tw-bg-opacity: 1;
-  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
 }
 
 .py-2 {
@@ -736,11 +736,6 @@ video {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
-.hover\:bg-gray-50:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(249 250 251 / var(--tw-bg-opacity));
-}
-
 .hover\:bg-gray-100:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(243 244 246 / var(--tw-bg-opacity));
@@ -758,24 +753,12 @@ video {
 }
 
 @media (max-width: 560px) {
-  .rxs\:max-h-\[100px\] {
-    max-height: 100px;
-  }
-
-  .rxs\:max-h-\[360px\] {
-    max-height: 360px;
-  }
-
   .rxs\:max-h-\[480px\] {
     max-height: 480px;
   }
 }
 
 @media (max-height: 840px) {
-  .short\:max-h-\[400px\] {
-    max-height: 400px;
-  }
-
   .short\:max-h-\[360px\] {
     max-height: 360px;
   }

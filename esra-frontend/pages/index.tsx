@@ -24,7 +24,7 @@ const Home: NextPage = () => {
 
       <footer className="flex h-24 w-full flex-col items-center justify-center border-t-[1px] gap-6">
         <h2 className='text-gray-600 text-sm'>
-          Explainable Scientific Research Assistance Plus
+          Explainable Scientific Research Assistant Plus
         </h2>
         <div  className="flex items-center justify-center gap-10">
           <div
