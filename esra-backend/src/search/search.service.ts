@@ -12,6 +12,9 @@ export class SearchService {
     searchUrl: string;
     searchEngineResultLimit: number;
     searchResultExpireDuration: number;
+    completeUrl: string;
+    searchEngineCompleteLimit: number;
+
     constructor(
         private readonly configService: ConfigService,
         private readonly httpService: HttpService,
@@ -19,7 +22,9 @@ export class SearchService {
         
         this.searchEngineUrl = this.configService.get<string>('SEARCH_ENGINE_URL');
         this.searchEngineResultLimit = parseInt(this.configService.get<string>('SEARCH_ENGINE_RESULT_LIMIT'));
+        this.searchEngineCompleteLimit = parseInt(this.configService.get<string>('SEARCH_ENGINE_COMPLETE_LIMIT'));
         this.searchUrl = new URL("search", this.searchEngineUrl).toString();
+        this.completeUrl = new URL("complete", this.searchEngineUrl).toString();
         this.searchResultExpireDuration = parseInt(this.configService.get<string>('QUERY_EXPIRE_DURATION'));
 
     }
@@ -46,11 +51,20 @@ export class SearchService {
     }
 
     async searchUsingSearchEngine(query: string) {
+        return this.searchServiceRequest(query, this.searchUrl, this.searchEngineResultLimit);
+    }
+
+    async complete(query: string) {
+        return this.searchServiceRequest(query, this.completeUrl, this.searchEngineCompleteLimit);
+    }
+
+    async searchServiceRequest(query: string, url: string, limit: number, skip: number=0) {
         const { data } = await firstValueFrom(
-            this.httpService.get(this.searchUrl, {
+            this.httpService.get(url, {
                 params: {
                     query,
-                    limit: this.searchEngineResultLimit
+                    skip,
+                    limit
                 }
             })
         );

@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { responseJson } from 'src/share/util/response.util';
-import { SearchDTO } from './search.dto';
+import { CompleteDTO, SearchDTO } from './search.dto';
 import { SearchService } from './search.service';
 
 @Controller('search')
@@ -14,5 +14,12 @@ export class SearchController {
         limit = limit ?? 5;
         const result = await this.searchService.search(query, no_cache, limit, skip)
         return responseJson(`search success "${query}"`, result);
+    }
+
+    @Get("/complete")
+    async complete(@Query() queries: CompleteDTO): Promise<object> {
+        const { query } = queries;
+        const result = await this.searchService.complete(query);
+        return responseJson(`get complete success"`, result);
     }
 }

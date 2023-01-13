@@ -38,6 +38,7 @@ class FullCrossEncoderReranker(ThreadCrossEncoderReranker):
 bm25, gpl_tsdae = BM25(**ES_ARGS), GplTsdae(device=DEVICE)
 cer = FullCrossEncoderReranker(bm25, BM25_SIZE, gpl_tsdae, GPL_TSDAE_SIZE, device=DEVICE)
 engine = ESRAEngine(cer)
+completion_engine = ESRAEngine(bm25, less=True)
 
 
 
@@ -53,3 +54,10 @@ def search():
     limit = request.args.get('limit', default=5, type=int)
     skip = request.args.get('skip', default=0, type=int)
     return engine.search(query, size=limit, shift=skip)
+
+@app.route("/complete", methods=['GET'])
+def completion():
+    query = request.args.get('query', type=str)
+    limit = request.args.get('limit', default=5, type=int)
+    skip = request.args.get('skip', default=0, type=int)
+    return completion_engine.search(query, size=limit, shift=skip)

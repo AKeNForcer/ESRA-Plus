@@ -23,3 +23,9 @@ export class SearchDTO {
   @Transform(({ value }) => ((value == 'true' || value == 1) ?? false))
   no_cache: boolean;
 }
+
+export class CompleteDTO {
+  @IsString()
+  @IsNotEmpty()
+  query: string;
+}
