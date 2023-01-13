@@ -36,10 +36,12 @@ export class SearchService {
         }
         return this.searchResultModel.find({ query }, { 
             _id: 0,
-            id: 1,
+            paperId: 1,
             rank: 1,
             title: 1,
             categories: 1,
+            abstract: 1,
+            authors: 1
         }).sort({ rank: 1 }).skip(skip).limit(limit)
     }
 

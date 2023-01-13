@@ -25,15 +25,16 @@ class ESRAEngine:
                 }
             },
             _source=False, 
-            fields=["id", "categories", "title", "abstract"],
+            fields=["id", "categories", "title", "abstract", "authors"],
             size=size
         )["hits"]["hits"]
 
         return [dict(rank=i+1, **x) for i, x in enumerate(sorted([ {
             'score': score_by_papers_id[x['fields']['id'][0]][0],
             'categories': x['fields']['categories'][0],
-            'id': x['fields']['id'][0],
+            'paperId': x['fields']['id'][0],
             'title': x['fields']['title'][0],
             'abstract': x['fields']['abstract'][0],
+            'authors': x['fields']['authors'][0],
             'detail': score_by_papers_id[x['fields']['id'][0]][1],
         } for i, x in enumerate(es_res)], key=lambda x: -x['score']))]

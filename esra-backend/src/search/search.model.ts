@@ -16,7 +16,7 @@ export class SearchResult {
   query: string;
 
   @Prop({ type: String, required: true })
-  id: string;
+  paperId: string;
 
   @Prop({ type: String, required: true })
   title: string;
@@ -35,6 +35,9 @@ export class SearchResult {
 
   @Prop({ type: String, required: true })
   abstract: string;
+
+  @Prop({ type: String, required: true })
+  authors: string;
 }
 export type SearchResultDocument = SearchResult & Document;
 export const SearchResultSchema = SchemaFactory.createForClass(SearchResult);
