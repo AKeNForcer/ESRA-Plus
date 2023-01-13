@@ -33,7 +33,7 @@ class ESRAEngine:
         return [dict(rank=i+1, **x) for i, x in enumerate(sorted([ {
             'score': score_by_papers_id[x['fields']['id'][0]][0],
             'detail': score_by_papers_id[x['fields']['id'][0]][1],
-            **{ field: x['fields'][field][0] for field in self.fields }
+            **{ 'paperId' if field=='id' else field: x['fields'][field][0] for field in self.fields }
             # 'categories': x['fields']['categories'][0],
             # 'paperId': x['fields']['id'][0],
             # 'title': x['fields']['title'][0],
