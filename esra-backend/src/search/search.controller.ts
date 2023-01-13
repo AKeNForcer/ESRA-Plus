@@ -10,8 +10,8 @@ export class SearchController {
     @Get()
     async search(@Query() queries: SearchDTO): Promise<object> {
         let { query, skip, limit, no_cache } = queries;
-        skip = skip | 0;
-        limit = limit | 1;
+        skip = skip ?? 0;
+        limit = limit ?? 5;
         const result = await this.searchService.search(query, no_cache, limit, skip)
         return responseJson(`search success "${query}"`, result);
     }
