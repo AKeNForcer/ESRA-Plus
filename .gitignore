@@ -1,3 +1,4 @@
 .DS_Store
 *.env
 esra-search/pipelines/gpl/*
+esra-frontend/dist/*
