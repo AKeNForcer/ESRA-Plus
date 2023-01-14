@@ -11,6 +11,7 @@ module.exports = {
         'xs': '560px',
         'rxs': {'raw': '(max-width: 560px)'},
         'short': {'raw': '(max-height: 840px)'},
+        'show-logo': '1100px',
       }
     },
   },

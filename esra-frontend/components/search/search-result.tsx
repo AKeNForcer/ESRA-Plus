@@ -7,7 +7,6 @@ export const SearchResult = (props: any) => {
   const { title, onSubmitClick } = props
   const handleSubmitClick = () => {
     if (!onSubmitClick) return;
-    console.log(title);
     onSubmitClick(title);
   }
 
