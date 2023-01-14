@@ -8,19 +8,31 @@ export const SearchComponent = () => {
   const [query, setQuery] = useState("");
   const [completion, setCompletion] = useState<Array<{ [key: string]: any }>>([]);
   const [isFocused, setIsFocused] = useState(false);
+  const [isIdle, setIsIdle] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<any>(null);
 
   const handleQuery = (event: any) => {
     const newQuery = event.target.value;
     setQuery(newQuery);
-    const COMPLETE_URL = new URL("/search/complete", process.env.NEXT_PUBLIC_BACKEND_URL).toString();
+
+    if (isIdle) {
+      setIsIdle(false);
+    }
+    clearTimeout(timeoutId);
     if (newQuery.length > 0) {
-      setIsFocused(true);
-      axios.get(COMPLETE_URL, { params: { query: newQuery } }).then(response => {
-        setCompletion(response.data.result);
-      });
+      setTimeoutId(setTimeout(() => {
+        const COMPLETE_URL = new URL("/search/complete", process.env.NEXT_PUBLIC_BACKEND_URL).toString();
+          setIsFocused(true);
+          axios.get(COMPLETE_URL, { params: { query: newQuery } }).then(response => {
+            setCompletion(response.data.result);
+          });
+          setIsIdle(true);
+        }, 500));
     } else {
       setCompletion([]);
+      setIsIdle(true);
     }
+
   }
 
   const ref = useRef(null);
