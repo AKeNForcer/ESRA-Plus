@@ -44,7 +44,7 @@ export const RealSearchResult = (props: any) => {
           </button>
         </div>
       </div>
-      <h3 className='flex items-center justify-start text-left w-full px-1.5 text-base font-semibold pb-3'>
+      <h3 className='flex items-center justify-start text-left w-full px-1.5 text-base font-semibold pb-3 text-cyan-900'>
         {result['title']}
       </h3>
       {
