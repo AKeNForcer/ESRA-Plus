@@ -14,6 +14,7 @@ load_dotenv()
 DEVICE = os.environ['DEVICE']
 BM25_SIZE = int(os.environ['BM25_SIZE'])
 GPL_TSDAE_SIZE = int(os.environ['GPL_TSDAE_SIZE'])
+USE_GPL_TSDAE_COMPLETION = os.environ['USE_GPL_TSDAE_COMPLETION'] == "yes"
 ES_ARGS = dict(
     hosts=os.environ['MAIN_ELASTICSEARCH_HOST'],
     basic_auth=(
@@ -38,7 +39,7 @@ class FullCrossEncoderReranker(ThreadCrossEncoderReranker):
 bm25, gpl_tsdae = BM25(**ES_ARGS), GplTsdae(device=DEVICE)
 cer = FullCrossEncoderReranker(bm25, BM25_SIZE, gpl_tsdae, GPL_TSDAE_SIZE, device=DEVICE)
 engine = ESRAEngine(cer)
-completion_engine = ESRAEngine(bm25, less=True)
+completion_engine = ESRAEngine(gpl_tsdae if USE_GPL_TSDAE_COMPLETION else bm25, less=True)
 
 
 
