@@ -4,16 +4,37 @@ networks:
   esra-db-es:
     external: true
 services:
+  search:
+    image: esra-search
+    restart: always
+    environment:
+      MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
+      MAIN_ELASTICSEARCH_USER: elastic
+      MAIN_ELASTICSEARCH_PASS: esra_CP44
+      DEVICE: 'cuda:1'
+      BM25_SIZE: 100
+      GPL_TSDAE_SIZE: 100
+      USE_GPL_TSDAE_COMPLETION: 'no'
+    volumes:
+      - ./esra-search/pipelines/gpl/:/esra/pipelines/gpl/
+    networks:
+      - esra
+      - esra-db-es
+    deploy:
+      resources:
+        reservations:
+          devices:
+          -  driver: nvidia
+             count: all
+             capabilities: [gpu]
   backend:
-    build: ./esra-backend
     image: esra-backend
     restart: always
     environment:
-      PORT: 3001
-      SEARCH_ENGINE_URL: http://localhost:5555
+      SEARCH_ENGINE_URL: http://search:5000
       SEARCH_ENGINE_RESULT_LIMIT: 100
       SEARCH_ENGINE_COMPLETE_LIMIT: 8
-      PAPER_SERVICE_URL: http://localhost:5556
+      PAPER_SERVICE_URL: http://localhost:5000
       MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
       MONGODB_DB_NAME: esra_plus
       QUERY_EXPIRE_DURATION: 3600000
@@ -21,7 +42,6 @@ services:
       - esra
       - esra-db-es
   frontend:
-    build: ./esra-frontend
     image: esra-frontend
     restart: always
     networks:
@@ -30,11 +50,11 @@ services:
       HOST: 0.0.0.0
       NEXT_PUBLIC_BACKEND_URL: http://172.28.51.9:6680/api
   gateway:
-    build: ./api-gateway
     image: esra-nginx
-    depends_on:
+    links:
       - backend
       - frontend
+      - search
     restart: always
     networks:
       - esra
