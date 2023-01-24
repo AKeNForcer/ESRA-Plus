@@ -1,0 +1,42 @@
+version: '3.7'
+networks:
+  esra:
+  esra-db-es:
+    external: true
+services:
+  backend:
+    build: ./esra-backend
+    image: esra-backend
+    restart: always
+    environment:
+      PORT: 3001
+      SEARCH_ENGINE_URL: http://localhost:5555
+      SEARCH_ENGINE_RESULT_LIMIT: 100
+      SEARCH_ENGINE_COMPLETE_LIMIT: 8
+      PAPER_SERVICE_URL: http://localhost:5556
+      MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
+      MONGODB_DB_NAME: esra_plus
+      QUERY_EXPIRE_DURATION: 3600000
+    networks:
+      - esra
+      - esra-db-es
+  frontend:
+    build: ./esra-frontend
+    image: esra-frontend
+    restart: always
+    networks:
+      - esra
+    environment:
+      HOST: 0.0.0.0
+      NEXT_PUBLIC_BACKEND_URL: http://172.28.51.9:6680/api
+  gateway:
+    build: ./api-gateway
+    image: esra-nginx
+    depends_on:
+      - backend
+      - frontend
+    restart: always
+    networks:
+      - esra
+    ports:
+      - '6680:80'

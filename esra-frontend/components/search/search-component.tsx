@@ -45,7 +45,7 @@ export const SearchComponent = (props: any) => {
 
   }
 
-  const ref = useRef(null);
+  const ref = useRef<any>(null);
   useEffect(() => {
     function handleClickOutside(event: any) {
       if (ref.current && !ref.current.contains(event.target)) {
