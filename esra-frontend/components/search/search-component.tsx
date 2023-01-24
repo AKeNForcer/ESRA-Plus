@@ -8,11 +8,11 @@ import { useRouter } from "next/router";
 export const SearchComponent = (props: any) => {
   const router = useRouter();
 
-  const origin = typeof window !== 'undefined' && window.location.origin
-      ? window.location.origin
-      : '';
+  const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
+    typeof window !== 'undefined' && window.location.origin
+    ? window.location.origin
+    : '' );
     
-  console.log("origin", origin);
   
   // const { initialQuery, currPage } = props;
   const initialQuery = router.query.query;
