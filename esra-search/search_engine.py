@@ -16,7 +16,7 @@ BM25_SIZE = int(os.environ['BM25_SIZE'])
 GPL_TSDAE_SIZE = int(os.environ['GPL_TSDAE_SIZE'])
 USE_GPL_TSDAE_COMPLETION = os.environ['USE_GPL_TSDAE_COMPLETION'] == "yes"
 ES_ARGS = dict(
-    hosts=os.environ['MAIN_ELASTICSEARCH_HOST'],
+    hosts=[os.environ['MAIN_ELASTICSEARCH_HOST']],
     basic_auth=(
         os.environ['MAIN_ELASTICSEARCH_USER'],
         os.environ['MAIN_ELASTICSEARCH_PASS'],
@@ -28,18 +28,19 @@ class FullCrossEncoderReranker(ThreadCrossEncoderReranker):
     def __init__(self, 
                  bm25, size_bm25, 
                  gpl_tsdae, size_gpl_tsdae, 
+                 hosts, basic_auth,
                  device='cuda'
                 ):
         super().__init__([
             dict(retriver=bm25, size=size_bm25),
             dict(retriver=gpl_tsdae, size=size_gpl_tsdae)
-        ], device)
+        ], hosts, basic_auth, device)
 
 
 bm25, gpl_tsdae = BM25(**ES_ARGS), GplTsdae(device=DEVICE)
-cer = FullCrossEncoderReranker(bm25, BM25_SIZE, gpl_tsdae, GPL_TSDAE_SIZE, device=DEVICE)
-engine = ESRAEngine(cer)
-completion_engine = ESRAEngine(gpl_tsdae if USE_GPL_TSDAE_COMPLETION else bm25, less=True)
+cer = FullCrossEncoderReranker(bm25, BM25_SIZE, gpl_tsdae, GPL_TSDAE_SIZE, **ES_ARGS, device=DEVICE)
+engine = ESRAEngine(cer, **ES_ARGS)
+completion_engine = ESRAEngine(gpl_tsdae if USE_GPL_TSDAE_COMPLETION else bm25, less=True, **ES_ARGS)
 
 
 

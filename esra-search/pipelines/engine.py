@@ -4,10 +4,10 @@ from elasticsearch import Elasticsearch
 
 class ESRAEngine:
 
-    def __init__(self, pipeline, less=False, es_url=["tcp://172.18.0.2:9200"], es_auth=("elastic", "esra_CP44")):
+    def __init__(self, pipeline, less=False, hosts=["tcp://172.18.0.2:9200"], basic_auth=("elastic", "esra_CP44")):
         self.pipeline = pipeline
         self.less = less
-        self.main_es = Elasticsearch(es_url, basic_auth=es_auth)
+        self.main_es = Elasticsearch(hosts, basic_auth=basic_auth)
         self.fields = ["id", "title", *([] if self.less else ["categories", "abstract", "authors"])]
 
     def search(self, query, size=10, shift = 0):
