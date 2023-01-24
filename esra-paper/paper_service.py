@@ -2,11 +2,11 @@ from flask import Flask, request
 from dotenv import load_dotenv
 import os
 from elasticsearch import Elasticsearch
+from gevent.pywsgi import WSGIServer
 
 
 
 load_dotenv()
-DEVICE = os.environ['DEVICE']
 ES_ARGS = dict(
     hosts=os.environ['MAIN_ELASTICSEARCH_HOST'],
     basic_auth=(
@@ -15,6 +15,10 @@ ES_ARGS = dict(
     )
 )
 PAPER_DOWNLOAD_URL = os.environ['PAPER_DOWNLOAD_URL']
+
+
+HOST = os.environ['HOST'] if 'HOST' in os.environ else ''
+PORT = int(os.environ['PORT']) if 'PORT' in os.environ else 5000
 
 
 main_es = Elasticsearch(**ES_ARGS)
@@ -45,3 +49,8 @@ def get_paper(id: str):
         **es_res,
         pdf=PAPER_DOWNLOAD_URL.format(id)
     )
+
+if __name__ == '__main__':
+    print(f"production server is running at {HOST}:{PORT}")
+    http_server = WSGIServer((HOST, PORT), app)
+    http_server.serve_forever()

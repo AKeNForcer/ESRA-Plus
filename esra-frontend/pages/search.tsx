@@ -14,11 +14,15 @@ const SearchPage: NextPage = () => {
   const { query } = router.query;
   const [realSearchResult, setRealSearchResult] = useState<Array<{ [key: string]: any }>>([]);
 
+  const origin = typeof window !== 'undefined' && window.location.origin
+    ? window.location.origin
+    : '';
+
   useEffect(() => {
     console.log(`query changed: ${query}`);
     if (query){
       setRealSearchResult([]);
-      const SEARCH_URL = new URL("/search", process.env.NEXT_PUBLIC_BACKEND_URL).toString();
+      const SEARCH_URL = new URL("/api/search", origin).toString();
       axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT } }).then(response => {
         console.log(response.data.result);
         setRealSearchResult(response.data.result);

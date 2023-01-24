@@ -4,6 +4,17 @@ networks:
   esra-db-es:
     external: true
 services:
+  paper:
+    image: esra-paper
+    restart: always
+    environment:
+      MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
+      MAIN_ELASTICSEARCH_USER: elastic
+      MAIN_ELASTICSEARCH_PASS: esra_CP44
+      PAPER_DOWNLOAD_URL: 'https://arxiv.org/pdf/{}.pdf'
+    networks:
+      - esra
+      - esra-db-es
   search:
     image: esra-search
     restart: always
@@ -34,7 +45,7 @@ services:
       SEARCH_ENGINE_URL: http://search:5000
       SEARCH_ENGINE_RESULT_LIMIT: 100
       SEARCH_ENGINE_COMPLETE_LIMIT: 8
-      PAPER_SERVICE_URL: http://localhost:5000
+      PAPER_SERVICE_URL: http://paper:5000
       MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
       MONGODB_DB_NAME: esra_plus
       QUERY_EXPIRE_DURATION: 3600000
@@ -48,7 +59,6 @@ services:
       - esra
     environment:
       HOST: 0.0.0.0
-      NEXT_PUBLIC_BACKEND_URL: http://172.28.51.9:6680/api
   gateway:
     image: esra-nginx
     links:

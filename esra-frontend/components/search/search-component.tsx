@@ -7,6 +7,12 @@ import { useRouter } from "next/router";
 
 export const SearchComponent = (props: any) => {
   const router = useRouter();
+
+  const origin = typeof window !== 'undefined' && window.location.origin
+      ? window.location.origin
+      : '';
+    
+  console.log("origin", origin);
   
   // const { initialQuery, currPage } = props;
   const initialQuery = router.query.query;
@@ -31,7 +37,7 @@ export const SearchComponent = (props: any) => {
     clearTimeout(timeoutId);
     if (newQuery.length > 0) {
       setTimeoutId(setTimeout(() => {
-        const COMPLETE_URL = new URL("/search/complete", process.env.NEXT_PUBLIC_BACKEND_URL).toString();
+        const COMPLETE_URL = new URL("/api/search/complete", origin).toString();
         setIsFocused(true);
         axios.get(COMPLETE_URL, { params: { query: newQuery } }).then(response => {
           setCompletion(response.data.result);
