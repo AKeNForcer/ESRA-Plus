@@ -12,9 +12,8 @@ export const SearchComponent = (props: any) => {
     typeof window !== 'undefined' && window.location.origin
     ? window.location.origin
     : '' );
-    
+
   
-  // const { initialQuery, currPage } = props;
   const initialQuery = router.query.query;
   const [query, setQuery] = useState(initialQuery ?? "");
   const [completion, setCompletion] = useState<Array<{ [key: string]: any }>>([]);

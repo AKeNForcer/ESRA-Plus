@@ -1,8 +1,6 @@
-import { ExpandMore } from '@material-ui/icons'
 import axios from 'axios'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { RealSearchResult } from '../components/search/real-search-result'

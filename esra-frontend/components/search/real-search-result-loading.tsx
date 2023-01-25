@@ -4,11 +4,6 @@ import { FunctionComponent, useState } from "react";
 
 
 export const RealSearchResultLoading = (props: any) => {
-  // const { title, onSubmitClick } = props
-  // const handleSubmitClick = () => {
-    //   if (!onSubmitClick) return;
-    //   onSubmitClick(title);
-    // }
 
   return <>
     <li className='flex flex-col items-center justify-center w-full p-3 border-[1px] gap-3 animate-pulse'>

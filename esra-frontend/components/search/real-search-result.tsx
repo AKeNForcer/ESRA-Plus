@@ -5,11 +5,6 @@ import { FunctionComponent, useState } from "react";
 
 
 export const RealSearchResult = (props: any) => {
-  // const { title, onSubmitClick } = props
-  // const handleSubmitClick = () => {
-  //   if (!onSubmitClick) return;
-  //   onSubmitClick(title);
-  // }
   const { result, query } = props;
   
   const [isExpand, setIsExpand] = useState(false);
