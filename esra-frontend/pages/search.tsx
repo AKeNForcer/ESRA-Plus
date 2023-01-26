@@ -88,7 +88,7 @@ const SearchPage: NextPage = () => {
               null
             }
           </div>
-          <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[500px] items-center gap-5'>
+          <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[500px] items-center gap-3'>
             <div className='flex w-full h-24 justify-start p-3 border-[1px]'>
               Overview
             </div>

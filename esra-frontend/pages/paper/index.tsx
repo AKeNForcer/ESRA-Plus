@@ -75,14 +75,14 @@ const PaperPage: NextPage = () => {
                   { (query !== undefined && paper !== undefined) ? <ResultPaper query={query} result={paper}/> : null }
                 </ul>
               </div>
-              <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[300px] items-center gap-5'>
-                <div className='flex flex-row w-full justify-center items-center gap-5'>
-                  <Link href="google.com" className='flex justify-center items-center h-12 w-full border-[1px] p-3 bg-cyan-800 text-white'>
+              <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[300px] items-center gap-3'>
+                <div className='flex flex-row w-full justify-center items-center gap-3'>
+                  <a href={paper ? paper["pdf"] : ''} target="_blank" className='flex justify-center items-center h-12 w-full border-[1px] p-3 bg-cyan-800 text-white hover:bg-opacity-80'>
                     PDF
-                  </Link>
-                  <Link href="google.com" className='flex justify-center items-center h-12 w-full border-[1px] p-3'>
+                  </a>
+                  <a href={paper ? paper["pdf"] : ''} target="_blank" className='flex justify-center items-center h-12 w-full border-[1px] p-3 bg-red-800 text-white hover:bg-opacity-80'>
                     ArXiv
-                  </Link>
+                  </a>
                 </div>
                 <div className='flex w-full h-24 justify-start p-3 border-[1px]'>
                   Fact list
