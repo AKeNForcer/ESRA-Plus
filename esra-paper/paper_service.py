@@ -31,13 +31,14 @@ app = Flask(__name__)
 def hello():
     return "ESRA+ Paper Service is working."
 
-@app.route("/paper/<id>", methods=['GET'])
-def get_paper(id: str):
+@app.route("/paper", methods=['GET'])
+def get_paper():
+    paper_id = request.args.get('paperId', type=str)
     try:
         es_res = main_es.search(
             index="papers", 
             query= {
-                "match_phrase": { "id": id }
+                "match_phrase": { "id": paper_id }
             },
             _source=True, 
             size=1
@@ -47,7 +48,7 @@ def get_paper(id: str):
     del es_res['update_date']
     return dict(
         **es_res,
-        pdf=PAPER_DOWNLOAD_URL.format(id)
+        pdf=PAPER_DOWNLOAD_URL.format(paper_id)
     )
 
 if __name__ == '__main__':

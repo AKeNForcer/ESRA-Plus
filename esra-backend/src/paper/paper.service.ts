@@ -18,7 +18,7 @@ export class PaperService {
 
     async getPaper(paperId: string) {
         const { data } = await firstValueFrom(
-            this.httpService.get((new URL(`paper/${paperId}`, this.paperServiceUrl)).toString()).pipe(
+            this.httpService.get((new URL(`paper?paperId=${paperId}`, this.paperServiceUrl)).toString()).pipe(
                 catchError((error) => {
                     throw error;
                 }),

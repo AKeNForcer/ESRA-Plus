@@ -4,10 +4,8 @@ import { FunctionComponent, useState } from "react";
 
 
 
-export const RealSearchResult = (props: any) => {
+export const ResultPaper = (props: any) => {
   const { result, query } = props;
-  
-  const [isExpand, setIsExpand] = useState(false);
 
   return <>
     <li
@@ -37,11 +35,6 @@ export const RealSearchResult = (props: any) => {
             <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs'>{result["paperId"]}</li>
           </ul>
         </div>
-        <div className='flex items-start justify-center pt-1'>
-          <button className='w-6 h-6 text-gray-500' onClick={() => setIsExpand(!isExpand)}>
-            {isExpand ? <ExpandLess /> : <ExpandMore />}
-          </button>
-        </div>
       </div>
       <Link
         href={`/paper?paperId=${result["paperId"]}&query=${query}`}
@@ -51,17 +44,25 @@ export const RealSearchResult = (props: any) => {
           {result['title']}
         </h3>
       </Link>
-      {
-        isExpand ?
-          <>
-            <div className='flex flex-col show-logo:flex-row items-start justify-center text-left w-full px-1.5 text-sm pb-3 gap-3'>
-              <h5>Abstract:</h5>
-              <p className="font-extralight">
-                {result['abstract']}
-              </p>
-            </div>
-          </> : null
-      }
+
+      <div className='flex flex-col show-logo:flex-row items-start justify-start text-left w-full px-1.5 text-sm pb-1 gap-3'>
+        <h5>Abstract:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h5>
+        <p className="font-extralight">
+          {result['abstract']}
+        </p>
+      </div>
+      <div className='flex flex-col show-logo:flex-row items-start justify-start text-left w-full px-1.5 text-sm pb-1 gap-3'>
+        <h5>Comments:&nbsp;</h5>
+        <p className="font-extralight">
+          {result['comments']}
+        </p>
+      </div>
+      <div className='flex flex-col show-logo:flex-row items-start justify-start text-left w-full px-1.5 text-sm pb-3 gap-3'>
+        <h5>Submitter:&nbsp;&nbsp;&nbsp;</h5>
+        <p className="font-extralight">
+          {result['submitter']}
+        </p>
+      </div>
     </li>
   </>
 }
