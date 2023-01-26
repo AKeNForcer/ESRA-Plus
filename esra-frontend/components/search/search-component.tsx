@@ -10,7 +10,7 @@ export const SearchComponent = (props: any) => {
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
-    ? new URL("/api", window.location.origin).toString()
+    ? new URL("api/", window.location.origin).toString()
     : '' );
 
   
@@ -36,7 +36,7 @@ export const SearchComponent = (props: any) => {
     clearTimeout(timeoutId);
     if (newQuery.length > 0) {
       setTimeoutId(setTimeout(() => {
-        const COMPLETE_URL = new URL(`${process.env.NEXT_PUBLIC_DEV_URL ? '' : '/api'}/search/complete`, origin).toString();
+        const COMPLETE_URL = new URL('search/complete', origin).toString();
         setIsFocused(true);
         axios.get(COMPLETE_URL, { params: { query: newQuery } }).then(response => {
           setCompletion(response.data.result);
