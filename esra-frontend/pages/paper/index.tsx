@@ -77,15 +77,35 @@ const PaperPage: NextPage = () => {
               </div>
               <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[300px] items-center gap-3'>
                 <div className='flex flex-row w-full justify-center items-center gap-3'>
-                  <a href={paper ? paper["pdf"] : ''} target="_blank" className='flex justify-center items-center h-12 w-full border-[1px] p-3 bg-cyan-800 text-white hover:bg-opacity-80'>
+                  <a href={paper ? paper["pdf"] : ''} target="_blank" className='flex justify-center items-center h-12 w-full border-[1px] p-3 bg-cyan-800 text-white hover:bg-opacity-80 hover:shadow-md'>
                     PDF
                   </a>
-                  <a href={paper ? paper["pdf"] : ''} target="_blank" className='flex justify-center items-center h-12 w-full border-[1px] p-3 bg-red-800 text-white hover:bg-opacity-80'>
+                  <a href={paper ? paper["arxiv"] : ''} target="_blank" className='flex justify-center items-center h-12 w-full border-[1px] p-3 bg-red-800 text-white hover:bg-opacity-80 hover:shadow-md'>
                     ArXiv
                   </a>
                 </div>
-                <div className='flex w-full h-24 justify-start p-3 border-[1px]'>
-                  Fact list
+                <div className='flex flex-col w-full justify-start items-start p-3 border-[1px] text-start hover:shadow-md'>
+                  <h3 className='pl-1 pb-3'>Related Papers</h3>
+                  <Link href={`/google`}>
+                    <div>
+
+                    </div>
+                    <h4 className='mx-2 p-3 font-semibold text-cyan-900 hover:underline border-t-[1px]'>
+                      Learning Deformable Object Manipulation from Expert Demonstrations
+                    </h4>
+                    <h4 className='mx-2 p-3 font-semibold text-cyan-900 hover:underline border-t-[1px]'>
+                      Comparison of Speech Activity Detection Techniques for Speaker Recognition
+                    </h4>
+                    <h4 className='mx-2 p-3 font-semibold text-cyan-900 hover:underline border-t-[1px]'>
+                      Worst-case Throughput Analysis for Parametric Rate and Parametric Actor Execution Time Scenario-Aware Dataflow Graphs
+                    </h4>
+                    <h4 className='mx-2 p-3 font-semibold text-cyan-900 hover:underline border-t-[1px]'>
+                      Learning Deformable Object Manipulation from Expert Demonstrations
+                    </h4>
+                    <h4 className='mx-2 p-3 font-semibold text-cyan-900 hover:underline border-t-[1px]'>
+                      Comparison of Speech Activity Detection Techniques for Speaker Recognition
+                    </h4>
+                  </Link>
                 </div>
               </div>
             </>

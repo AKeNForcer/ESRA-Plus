@@ -38,11 +38,11 @@ export const ResultPaper = (props: any) => {
       </div>
       <Link
         href={`/paper?paperId=${result["paperId"]}&query=${query}`}
-        className="flex items-center justify-start text-left w-full px-1.5 text-base font-semibold pb-3 text-cyan-900 hover:underline"
+        className="flex items-center justify-start text-left w-full px-1.5 my-5 text-2xl font-semibold pb-3 text-cyan-900 hover:underline"
       >
-        <h3>
+        <h1>
           {result['title']}
-        </h3>
+        </h1>
       </Link>
 
       <div className='flex flex-col show-logo:flex-row items-start justify-start text-left w-full px-1.5 text-sm pb-1 gap-3'>
