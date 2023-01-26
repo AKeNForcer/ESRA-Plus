@@ -15,6 +15,7 @@ ES_ARGS = dict(
     )
 )
 PAPER_DOWNLOAD_URL = os.environ['PAPER_DOWNLOAD_URL']
+ARXIV_URL = os.environ['ARXIV_URL']
 
 
 HOST = os.environ['HOST'] if 'HOST' in os.environ else ''
@@ -48,7 +49,8 @@ def get_paper():
     del es_res['update_date']
     return dict(
         **es_res,
-        pdf=PAPER_DOWNLOAD_URL.format(paper_id)
+        pdf=PAPER_DOWNLOAD_URL.format(paper_id),
+        arxiv=ARXIV_URL.format(paper_id)
     )
 
 if __name__ == '__main__':
