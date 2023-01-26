@@ -7,6 +7,7 @@ import { RealSearchResult } from '../components/search/real-search-result'
 import { RealSearchResultLoading } from '../components/search/real-search-result-loading'
 import { SearchComponent } from '../components/search/search-component'
 import InfiniteScroll from "react-infinite-scroll-component";
+import { HeadLogo } from '../components/head-logo'
 
 const SearchPage: NextPage = () => {
   const router = useRouter();
@@ -60,11 +61,7 @@ const SearchPage: NextPage = () => {
       <div className="flex w-full h-auto flex-1 flex-col items-center justify-start text-center gap-[30px] absolute z-10">
         <header className="flex items-center w-full h-32 border-b-[1px] border-gray-300">
           <div className='flex items-center justify-center h-full w-1/5'>
-            <button onClick={() => {router.push(`/`)}}>
-              <h1 className="text-5xl font-semibold text-cyan-800 invisible show-logo:visible">
-                ESRA+
-              </h1> 
-            </button>
+            <HeadLogo/>
           </div>
         </header>
 

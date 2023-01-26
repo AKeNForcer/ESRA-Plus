@@ -2,6 +2,7 @@ import { Search } from '@material-ui/icons'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useState } from 'react'
 import { SearchComponent } from '../components/search/search-component'
 
@@ -16,9 +17,11 @@ const Home: NextPage = () => {
       </Head>
 
       <main className="flex w-full flex-1 flex-col items-center justify-center px-5 text-center gap-[30px] sm:mt-[140px]">
-        <h1 className="text-8xl font-semibold text-cyan-800">
-          ESRA+
-        </h1>
+          <h1 className="text-8xl font-semibold text-cyan-800">
+            <Link href='/'>
+              ESRA+
+            </Link>
+          </h1>
         <SearchComponent/>
       </main>
 
