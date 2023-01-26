@@ -14,12 +14,11 @@ const PaperPage: NextPage = () => {
   const router = useRouter();
   const { query, paperId } = router.query;
   const [notFound, setNotFound] = useState<boolean>(false);
-  const [paper, setPaper] = useState<{ [key: string]: any }>([]);
-  // const [hasMore, setHasMore] = useState(false);
+  const [paper, setPaper] = useState<{ [key: string]: any } | undefined>(undefined);
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
-      ? (new URL("/api", window.location.origin)).toString()
+      ? new URL("/api", window.location.origin).toString()
       : '');
 
   useEffect(() => {
@@ -70,7 +69,7 @@ const PaperPage: NextPage = () => {
             <div className='flex flex-col w-full gap-10 py-20'>
               <h2 className='text-9xl font-light text-gray-300'>404</h2>
               <h3 className='text-gray-400'>
-                Paper '{paperId}' is not avaliable right now!
+                Paper '{paperId}' is not found in our database right now!
               </h3>
             </div> :
             <>

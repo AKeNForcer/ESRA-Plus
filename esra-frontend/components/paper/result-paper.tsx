@@ -6,7 +6,7 @@ import { FunctionComponent, useState } from "react";
 
 export const ResultPaper = (props: any) => {
   const { result, query } = props;
-
+  console.log(result);
   return <>
     <li
       className='flex flex-col items-center justify-center w-full p-3 border-[1px] gap-3 hover:shadow-md'

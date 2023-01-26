@@ -10,7 +10,7 @@ export const SearchComponent = (props: any) => {
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
-    ? (new URL("/api", window.location.origin)).toString()
+    ? new URL("/api", window.location.origin).toString()
     : '' );
 
   
