@@ -59,6 +59,9 @@ services:
       - esra
     environment:
       HOST: 0.0.0.0
+      NEXT_PUBLIC_INITIAL_RESULT_LIMIT: 10
+      NEXT_PUBLIC_INCREMENT_RESULT_LIMIT: 10
+      NEXT_PUBLIC_TOTAL_RESULT_LIMIT: 100
   gateway:
     image: esra-nginx
     links:

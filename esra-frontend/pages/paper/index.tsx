@@ -19,13 +19,13 @@ const PaperPage: NextPage = () => {
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
-      ? new URL("/api", window.location.origin).toString()
+      ? (new URL("/api", window.location.origin)).toString()
       : '');
 
   useEffect(() => {
     console.log(`paper or query changed: ${paperId}, ${query}`);
     if (paperId) {
-      const PAPER_URL = new URL("/paper", origin).toString();
+      const PAPER_URL = new URL(`${process.env.NEXT_PUBLIC_DEV_URL ? '' : '/api'}/paper`, origin).toString();
       axios.get(PAPER_URL, { params: { query: query, paperId } })
         .then(response => {
           setPaper({paperId, ...response.data.result});

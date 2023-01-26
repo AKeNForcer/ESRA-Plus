@@ -16,7 +16,7 @@ const SearchPage: NextPage = () => {
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
-    ? new URL("/api", window.location.origin).toString()
+    ? (new URL("/api", window.location.origin)).toString()
     : '' );
 
   const NEXT_PUBLIC_TOTAL_RESULT_LIMIT = parseInt(process.env.NEXT_PUBLIC_TOTAL_RESULT_LIMIT ?? '100');
@@ -25,7 +25,7 @@ const SearchPage: NextPage = () => {
     console.log(`query changed: ${query}`);
     if (query){
       setRealSearchResult([]);
-      const SEARCH_URL = new URL("/search", origin).toString();
+      const SEARCH_URL = new URL(`${process.env.NEXT_PUBLIC_DEV_URL ? '' : '/api'}/search`, origin).toString();
       axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT } }).then(response => {
         setRealSearchResult(response.data.result);
         setHasMore(true);
@@ -35,7 +35,7 @@ const SearchPage: NextPage = () => {
 
   const loadMore = async () => {
     if (query){
-      const SEARCH_URL = new URL("/search", origin).toString();
+      const SEARCH_URL = new URL(`${process.env.NEXT_PUBLIC_DEV_URL ? '' : '/api'}/search`, origin).toString();
       axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INCREMENT_RESULT_LIMIT, skip: realSearchResult.length } }).then(response => {
         const newRes = [...realSearchResult, ...response.data.result];
         if (newRes.length >= NEXT_PUBLIC_TOTAL_RESULT_LIMIT) {
