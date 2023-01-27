@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
+import { Cron } from '@nestjs/schedule';
 import { Model } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
 import { SearchResult, SearchResultDocument } from './search.model';
@@ -69,5 +70,10 @@ export class SearchService {
             })
         );
         return data;
+    }
+
+    @Cron("*/10 * * * * *")
+    async clean() {
+        await this.searchResultModel.deleteMany({ expire_date: { $lte: new Date() } });
     }
 }

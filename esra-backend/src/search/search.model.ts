@@ -4,10 +4,10 @@ import { Document } from 'mongoose';
 @Schema()
 export class SearchResult {
   @Prop({ default: new Date() })
-  created_date: string;
+  created_date: Date;
 
   @Prop({ default: new Date() })
-  updated_date: string;
+  updated_date: Date;
 
   @Prop({ type: Date })
   expire_date: Date;
