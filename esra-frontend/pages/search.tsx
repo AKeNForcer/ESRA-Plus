@@ -14,6 +14,8 @@ const SearchPage: NextPage = () => {
   const { query } = router.query;
   const [realSearchResult, setRealSearchResult] = useState<Array<{ [key: string]: any }>>([]);
   const [hasMore, setHasMore] = useState(false);
+  const [showMinimal, setShowMinimal] = useState(false);
+  const [showMinimalBar, setShowMinimalBar] = useState(false);
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -47,6 +49,18 @@ const SearchPage: NextPage = () => {
     }
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowMinimal(window.scrollY > 30);
+      setShowMinimalBar(window.scrollY > 60);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-first">
       <Head>
@@ -54,16 +68,23 @@ const SearchPage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="flex w-full flex-col items-center px-5 pt-10 justify-start">
-        <SearchComponent currPage="search"/> 
+      <div className={`${showMinimal ? 'fixed' : ''} w-full z-50 h-0 -inset-y-[30px]`}>
+        <div className="flex w-full flex-col h-0 items-center px-5 pt-10 justify-start">
+          <SearchComponent currPage="search"/> 
+        </div>
       </div>
 
       <div className="flex w-full h-auto flex-1 flex-col items-center justify-start text-center gap-[30px] absolute z-10">
         <header className="flex items-center w-full h-32 border-b-[1px] border-gray-300">
-          <div className='flex items-center justify-center h-full w-1/5'>
+          <div className={`${showMinimal ? 'fixed inset-y-3 h-0' : 'items-center'} flex justify-center h-full w-1/5 z-50`}>
             <HeadLogo/>
           </div>
         </header>
+
+        {
+          showMinimalBar ?
+          <div className="fixed flex items-center w-full h-[68px] border-b-[1px] border-gray-300 bg-white"/> : null
+        }
 
         <main className='flex flex-col-reverse show-logo:flex-row w-full items-center show-logo:items-start justify-center text-gray-600 px-5 gap-5 py-4'>
           <div className='flex flex-col w-full max-w-[750px] items-center gap-3 pt-5 show-logo:pt-0'>
@@ -82,7 +103,6 @@ const SearchPage: NextPage = () => {
                     realSearchResult.map((res) => <RealSearchResult query={query} result={res} key={res["paperId"]}/>) :
                     Array(NEXT_PUBLIC_TOTAL_RESULT_LIMIT).fill(<RealSearchResultLoading/>)
                   }
-                  {/* <li className='flex items-center justify-center w-full p-3'>more</li> */}
                 </ul>
               </InfiniteScroll> :
               null
@@ -98,21 +118,6 @@ const SearchPage: NextPage = () => {
           </div>
         </main>
       </div>
-
-      {/* <footer className="flex h-24 w-full flex-col items-center justify-center border-t-[1px] gap-6">
-        <h2 className='text-gray-600 text-sm'>
-          Explainable Scientific Research Assistant Plus
-        </h2>
-        <div  className="flex items-center justify-center gap-10">
-          <div
-            className="flex items-center justify-center gap-4 text-gray-600 text-xs"
-          >
-            Powered by{' '}
-            <Image src="/chulaeng.png" alt="Chula Engineering Logo" width={135} height={1} />{' '}
-            <Image src="/nvidia.svg" alt="NVIDIA Logo" width={90} height={1} />
-          </div>
-        </div>
-      </footer> */}
     </div>
   )
 }

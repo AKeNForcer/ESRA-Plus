@@ -16,6 +16,8 @@ const PaperPage: NextPage = () => {
   const { query, paperId } = router.query;
   const [notFound, setNotFound] = useState<boolean>(false);
   const [paper, setPaper] = useState<{ [key: string]: any } | undefined>(undefined);
+  const [showMinimal, setShowMinimal] = useState(false);
+  const [showMinimalBar, setShowMinimalBar] = useState(false);
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -42,23 +44,42 @@ const PaperPage: NextPage = () => {
     }
   }, [query, paperId]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowMinimal(window.scrollY > 30);
+      setShowMinimalBar(window.scrollY > 60);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-first">
       <Head>
         <title>{paperId}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <div className="flex w-full flex-col items-center px-5 pt-10 justify-start">
-        <SearchComponent currPage="search" />
+      
+      <div className={`${showMinimal ? 'fixed' : ''} w-full z-50 h-0 -inset-y-[30px]`}>
+        <div className="flex w-full flex-col h-0 items-center px-5 pt-10 justify-start">
+          <SearchComponent currPage="search"/> 
+        </div>
       </div>
 
       <div className="flex w-full h-auto flex-1 flex-col items-center justify-start text-center gap-[30px] absolute z-10">
         <header className="flex items-center w-full h-32 border-b-[1px] border-gray-300">
-          <div className='flex items-center justify-center h-full w-1/5'>
+          <div className={`${showMinimal ? 'fixed inset-y-3 h-0' : 'items-center'} flex justify-center h-full w-1/5 z-50`}>
             <HeadLogo />
           </div>
         </header>
+
+        {
+          showMinimalBar ?
+          <div className="fixed flex items-center w-full h-[68px] border-b-[1px] border-gray-300 bg-white"/> : null
+        }
 
         <main className='flex flex-col show-logo:flex-row w-full items-center show-logo:items-start justify-center text-gray-600 px-5 gap-5 py-4'>
           {
