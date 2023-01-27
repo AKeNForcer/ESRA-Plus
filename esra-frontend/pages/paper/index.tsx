@@ -119,13 +119,16 @@ const PaperPage: NextPage = () => {
                       ArXiv
                     </a>
                   </div>
-                  <div className='flex flex-col w-full justify-start items-start p-3 border-[1px] text-start hover:shadow-md'>
-                    <h3 className='pl-1 pb-3'>Related Papers</h3>
+                  <div className='flex flex-col w-full justify-start items-start p-4 border-[1px] text-start hover:shadow-md'>
+                    <h3 className='pb-3'>Related Papers</h3>
                     {
                       relatedPapers && relatedPapers.length > 0 ?
                       relatedPapers.map((res: { [key: string]: any }) => (
-                        <Link href={`/paper?paperId=${res['paperId']}&query=${query} ${res['title']}`}>
-                          <h4 className='p-3 w-full font-semibold text-cyan-900 hover:underline border-t-[1px]'>
+                        <Link 
+                          href={`/paper?paperId=${res['paperId']}&query=${query} ${res['title']}`}
+                          className='p-3 w-full font-semibold text-cyan-900 hover:underline border-t-[1px]'
+                        >
+                          <h4>
                             {res['title']}
                           </h4>
                         </Link>
