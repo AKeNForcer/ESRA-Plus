@@ -85,7 +85,7 @@ const PaperPage: NextPage = () => {
 
       <div className="flex w-full h-auto flex-1 flex-col items-center justify-start text-center gap-[30px] absolute z-10">
         <header className="flex items-center w-full h-32 border-b-[1px] border-gray-300">
-          <div className={`${showMinimal ? 'fixed inset-y-3 h-0' : 'items-center'} flex justify-center h-full w-1/5 z-50`}>
+          <div className={`${showMinimal ? 'fixed inset-y-3 h-0' : 'items-center'} flex justify-center w-1/5 z-50`}>
             <HeadLogo />
           </div>
         </header>
