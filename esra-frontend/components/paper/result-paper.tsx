@@ -15,14 +15,6 @@ export const ResultPaper = (props: any) => {
       <div className='flex w-full font-ligeht'>
         <div className='flex flex-wrap justify-start w-full gap-y-1 gap-x-4 pb-1'>
           <ul className='flex flex-wrap justify-start w-auto gap-1'>
-            <li className='flex items-center justify-center px-1.5 h-7 text-xs'>authors:</li>
-            {
-              result["authors"].toString().replaceAll(" and ", ", ").split(", ").map((author: string) => (
-                <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs' key={author}>{author}</li>
-              ))
-            }
-          </ul>
-          <ul className='flex flex-wrap justify-start w-auto gap-1'>
             <li className='flex items-center justify-center px-1.5 h-7 text-xs'>categories:</li>
             {
               result["categories"].toString().split(" ").map((cat: string) => (
@@ -33,6 +25,14 @@ export const ResultPaper = (props: any) => {
           <ul className='flex flex-wrap justify-start w-auto gap-1'>
             <li className='flex items-center justify-center px-1.5 h-7 text-xs'>arXiv ID:</li>
             <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs'>{result["paperId"]}</li>
+          </ul>
+          <ul className='flex flex-wrap justify-start w-auto gap-1'>
+            <li className='flex items-center justify-center px-1.5 h-7 text-xs'>authors:</li>
+            {
+              result["authors"].toString().replaceAll(" and ", ", ").split(", ").map((author: string) => (
+                <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs' key={author}>{author}</li>
+              ))
+            }
           </ul>
         </div>
       </div>
