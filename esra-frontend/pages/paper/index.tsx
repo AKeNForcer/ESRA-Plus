@@ -126,7 +126,7 @@ const PaperPage: NextPage = () => {
                       relatedPapers.map((res: { [key: string]: any }) => (
                         <Link 
                           href={`/paper?paperId=${res['paperId']}&query=${query} ${res['title']}`}
-                          className='p-3 w-full font-semibold text-cyan-900 hover:underline border-t-[1px]'
+                          className='p-3 w-full font-semibold text-cyan-800 hover:underline border-t-[1px]'
                         >
                           <h4>
                             {res['title']}
@@ -134,7 +134,7 @@ const PaperPage: NextPage = () => {
                         </Link>
                       )) :
                       Array(5).fill(
-                        <h4 className='flex flex-col pt-5 p-3 w-full font-semibold text-cyan-900 hover:underline border-t-[1px] gap-2'>
+                        <h4 className='flex flex-col pt-5 p-3 w-full font-semibold text-cyan-800 hover:underline border-t-[1px] gap-2'>
                           <div className='w-11/12 h-4 bg-gray-200 animate-pulse rounded-full' />
                           <div className='w-3/4 h-4 bg-gray-200 animate-pulse rounded-full' />
                           <div className='w-4/5 h-4 bg-gray-200 animate-pulse rounded-full' />

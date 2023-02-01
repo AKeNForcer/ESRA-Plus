@@ -38,7 +38,7 @@ export const ResultPaper = (props: any) => {
       </div>
       <Link
         href={`/paper?paperId=${result["paperId"]}&query=${query}`}
-        className="flex items-center justify-start text-left w-full px-1.5 my-5 text-2xl font-semibold pb-3 text-cyan-900 hover:underline"
+        className="flex items-center justify-start text-left w-full px-1.5 my-5 text-2xl font-semibold pb-3 text-cyan-800 hover:underline"
       >
         <h1>
           {result['title']}
