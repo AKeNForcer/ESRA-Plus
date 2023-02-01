@@ -10,7 +10,7 @@ export const SearchResult = (props: any) => {
     onSubmitClick(title);
   }
 
-  return <li className="w-full hover:bg-gray-100" onClick={handleSubmitClick}>
+  return <li className="w-full hover:bg-gray-100 hover:cursor-pointer" onClick={handleSubmitClick}>
     <div className="flex my-1.5">
       <Search className='ml-3'/>
       <p className='ml-3 mx-5 text-gray-600 w-fullfocus:outline-none bg-transparent'>{title}</p>
