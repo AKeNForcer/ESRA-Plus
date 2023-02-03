@@ -100,6 +100,20 @@ export const SearchComponent = (props: any) => {
               value={query}
               placeholder="serch by keyword or context"
             />
+            {
+              isFocused && query.length > 0 ?
+              <div className="flex flex-col justify-center items-center pr-3">
+                <button onClick={() => {setQuery(""); setCompletion([]); setIsFocused(false)}}>
+                  <Clear/>
+                </button>
+              </div> : null
+            }
+            {
+              isFocused && query.length > 0 ?
+              <button className="flex h-6 w-24 justify-center items-center mb-[2px] pr-1 border-gray-200 border-l-[1px] rounded-r-full text-cyan-800 font-semibold text-sm hover:underline">
+                Search
+              </button> : null
+            }
           </form>
         </div>
         {
