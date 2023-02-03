@@ -1,4 +1,4 @@
-import { Search } from "@material-ui/icons"
+import { Search, Clear } from "@material-ui/icons"
 import { useEffect, useRef, useState } from "react";
 import { SearchResult } from "./search-result";
 import axios from 'axios';
