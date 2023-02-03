@@ -103,9 +103,9 @@ export const SearchComponent = (props: any) => {
             {
               isFocused && query.length > 0 ?
               <div className="flex flex-col justify-center items-center pr-3">
-                <button onClick={() => {setQuery(""); setCompletion([]); setIsFocused(false)}}>
+                <div onClick={() => {setQuery(""); setCompletion([]); setIsFocused(false)}}>
                   <Clear/>
-                </button>
+                </div>
               </div> : null
             }
             {
