@@ -26,7 +26,9 @@ export const RealSearchResult = (props: any) => {
           </ul>
           <ul className='flex flex-wrap justify-start w-auto gap-1'>
             <li className='flex items-center justify-center px-1.5 h-7 text-xs'>arXiv ID:</li>
-            <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs'>{result["paperId"]}</li>
+            <Link href={`/search?query=${result["paperId"]}`}>
+              <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs'>{result["paperId"]}</li>
+            </Link>
           </ul>
           {
             isExpand ?
@@ -34,7 +36,9 @@ export const RealSearchResult = (props: any) => {
               <li className='flex items-center justify-center px-1.5 h-7 text-xs'>authors:</li>
               {
                 result["authors"].toString().replaceAll(" and ", ", ").split(", ").map((author: string) => (
-                  <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs' key={author}>{author}</li>
+                  <Link href={`/search?query=${author}`}>
+                    <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs hover:underline' key={author}>{author}</li>
+                  </Link>
                 ))
               }
             </ul> : null
