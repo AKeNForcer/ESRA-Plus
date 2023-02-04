@@ -24,6 +24,7 @@ export class PaperService {
                 }),
               ),
         );
+        data.update_date = new Date(data.update_date)
         return data;
     }
 }

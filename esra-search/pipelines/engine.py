@@ -8,7 +8,7 @@ class ESRAEngine:
         self.pipeline = pipeline
         self.less = less
         self.main_es = Elasticsearch(hosts, basic_auth=basic_auth)
-        self.fields = ["id", "title", *([] if self.less else ["categories", "abstract", "authors"])]
+        self.fields = ["id", "title", "update_date", *([] if self.less else ["categories", "abstract", "authors"])]
 
     def search(self, query, size=10, shift = 0):
         eval_result = self.pipeline.eval(query, size + shift)[shift:]

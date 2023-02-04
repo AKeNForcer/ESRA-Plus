@@ -46,7 +46,6 @@ def get_paper():
         )["hits"]["hits"][0]['_source']
     except IndexError:
         return {"message": "not found"}, 404
-    del es_res['update_date']
     return dict(
         **es_res,
         pdf=PAPER_DOWNLOAD_URL.format(paper_id),

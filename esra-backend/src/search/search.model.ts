@@ -38,6 +38,9 @@ export class SearchResult {
 
   @Prop({ type: String, required: true })
   authors: string;
+
+  @Prop({ type: Date, required: true })
+  update_date: Date;
 }
 export type SearchResultDocument = SearchResult & Document;
 export const SearchResultSchema = SchemaFactory.createForClass(SearchResult);
