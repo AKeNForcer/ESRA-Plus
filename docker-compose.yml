@@ -49,7 +49,7 @@ services:
       PAPER_SERVICE_URL: http://paper:5000
       MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
       MONGODB_DB_NAME: esra_plus
-      QUERY_EXPIRE_DURATION: 3600000
+      QUERY_EXPIRE_DURATION: 300000
     networks:
       - esra
       - esra-db-es
