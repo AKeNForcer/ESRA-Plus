@@ -32,16 +32,22 @@ export const RealSearchResult = (props: any) => {
           </ul>
           {
             isExpand ?
-            <ul className='flex flex-wrap justify-start w-auto gap-1'>
-              <li className='flex items-center justify-center px-1.5 h-7 text-xs'>authors:</li>
-              {
-                result["authors"].toString().replaceAll(" and ", ", ").split(", ").map((author: string) => (
-                  <Link href={`/search?query=${author}`}>
-                    <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs hover:underline' key={author}>{author}</li>
-                  </Link>
-                ))
-              }
-            </ul> : null
+            <>
+              <ul className='flex flex-wrap justify-start w-auto gap-1'>
+                <li className='flex items-center justify-center px-1.5 h-7 text-xs'>authors:</li>
+                {
+                  result["authors"].toString().replaceAll(" and ", ", ").split(", ").map((author: string) => (
+                    <Link href={`/search?query=${author}`}>
+                      <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs hover:underline' key={author}>{author}</li>
+                    </Link>
+                  ))
+                }
+              </ul>
+              <ul className='flex flex-wrap justify-start w-auto gap-1'>
+                <li className='flex items-center justify-center px-1.5 h-7 text-xs'>update date:</li>
+                <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs'>{result["update_date"].toString().split("T")[0]}</li>
+              </ul>
+            </>: null
           }
         </div>
         <div className='flex items-start justify-center pt-1'>

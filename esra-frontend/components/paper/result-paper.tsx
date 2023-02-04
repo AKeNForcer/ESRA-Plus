@@ -38,6 +38,10 @@ export const ResultPaper = (props: any) => {
               ))
             }
           </ul>
+          <ul className='flex flex-wrap justify-start w-auto gap-1'>
+            <li className='flex items-center justify-center px-1.5 h-7 text-xs'>update date:</li>
+            <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs'>{result["update_date"].toString().split("T")[0]}</li>
+          </ul>
         </div>
       </div>
       <Link
