@@ -32,7 +32,7 @@ class CrossEncoderReranker:
         )["hits"]["hits"]
 
     def cross_encoder_rerank(self, query, retrived_papers, size, from_pipeline):
-        corpus = [f"({x['id'][0]}, {x['authors'][0]}) {x['title'][0]}. {x['abstract'][0]}" for x in retrived_papers]
+        corpus = [f"( id: {x['id'][0]} | authors: {x['authors'][0]} ) {x['title'][0]}. {x['abstract'][0]}" for x in retrived_papers]
         sentence_combinations = [[query, corpus_sentence] for corpus_sentence in corpus]
         similarity_scores = self.model.predict(sentence_combinations)
         sim_scores_argsort = np.argsort(similarity_scores)[::-1]
