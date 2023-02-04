@@ -13,11 +13,11 @@ import { ExpandMore } from '@material-ui/icons'
 const SearchPage: NextPage = () => {
   const router = useRouter();
   const { query } = router.query;
+  const sortBy = (["RELEVANCE", "NEWEST", "OLDEST"] as Array<string | string[] | undefined>).includes(router.query.sort) ? router.query.sort : "RELEVANCE" 
   const [realSearchResult, setRealSearchResult] = useState<Array<{ [key: string]: any }>>([]);
   const [hasMore, setHasMore] = useState(false);
   const [showMinimal, setShowMinimal] = useState(false);
   const [showMinimalBar, setShowMinimalBar] = useState(false);
-  const [sortBy, setSortBy] = useState("RELEVANCE");
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -30,6 +30,7 @@ const SearchPage: NextPage = () => {
     console.log(`query changed: ${query}`);
     if (query){
       setRealSearchResult([]);
+      setHasMore(false);
       const SEARCH_URL = new URL('search', origin).toString();
       axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT, sort: sortBy } }).then(response => {
         setRealSearchResult(response.data.result);
@@ -41,7 +42,7 @@ const SearchPage: NextPage = () => {
   const loadMore = async () => {
     if (query){
       const SEARCH_URL = new URL('search', origin).toString();
-      axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INCREMENT_RESULT_LIMIT, skip: realSearchResult.length } }).then(response => {
+      axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INCREMENT_RESULT_LIMIT, skip: realSearchResult.length, sort: sortBy } }).then(response => {
         const newRes = [...realSearchResult, ...response.data.result];
         if (newRes.length >= NEXT_PUBLIC_TOTAL_RESULT_LIMIT) {
           setHasMore(false);
@@ -99,8 +100,9 @@ const SearchPage: NextPage = () => {
                   Sort by:
                 </p>
                 <select 
+                  value={sortBy}
                   className='flex items-center text-center justify-center h-7 w-28 border-[1px] border-gray-300'
-                  onChange={(event) => setSortBy(event.target.value)}>
+                  onChange={(event) => router.replace(`/search?query=${query}&sort=${event.target.value}`)}>
                   <option value="RELEVANCE">Most relevant</option>
                   <option value="NEWEST">Most recent</option>
                   <option value="OLDEST">Least recent</option>
