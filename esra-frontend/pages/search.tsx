@@ -8,6 +8,7 @@ import { RealSearchResultLoading } from '../components/search/real-search-result
 import { SearchComponent } from '../components/search/search-component'
 import InfiniteScroll from "react-infinite-scroll-component";
 import { HeadLogo } from '../components/head-logo'
+import { ExpandMore } from '@material-ui/icons'
 
 const SearchPage: NextPage = () => {
   const router = useRouter();
@@ -87,7 +88,22 @@ const SearchPage: NextPage = () => {
         }
 
         <main className='flex flex-col-reverse show-logo:flex-row w-full items-center show-logo:items-start justify-center text-gray-600 px-5 gap-5 py-4'>
-          <div className='flex flex-col w-full max-w-[750px] items-center gap-3 pt-5 show-logo:pt-0'>
+          <div className='flex flex-col w-full max-w-[750px] items-start gap-3 pt-5 show-logo:pt-0'>
+            <div className='flex items-start justify-start w-full text-sm'>
+              <div className='text-start w-full'>
+                <h2 className='font-extralight'>Search Result of <mark className='text-cyan-800 font-semibold bg-transparent'>{query}</mark></h2>
+              </div>
+              <div className='flex items-center justify-end w-[250px] gap-1 text-xs'>
+                <p className=''>
+                  Sort by:
+                </p>
+                <select className='flex items-center text-center justify-center h-7 w-28 border-[1px] border-gray-300'>
+                  <option value="volvo">Most relevant</option>
+                  <option value="saab">Most recent</option>
+                  <option value="mercedes">Least recent</option>
+                </select>
+              </div>
+            </div>
             {
               realSearchResult ?
               <InfiniteScroll
