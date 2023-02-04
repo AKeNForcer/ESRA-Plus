@@ -30,7 +30,7 @@ export class SearchService {
 
     }
 
-    async search(query: string, no_cache: boolean, limit: number, skip: number): Promise<object> {
+    async search(query: string, no_cache: boolean, limit: number, skip: number, sortExp: { [key: string]: any } = { rank: 1 }): Promise<object> {
         const resCount = await this.searchResultModel.count({ query, expire_date: { $gt: new Date() } });
         if(no_cache || resCount < this.searchEngineResultLimit) {
             const [searchResult, _] = await Promise.all([
@@ -52,7 +52,7 @@ export class SearchService {
             abstract: 1,
             authors: 1,
             update_date: 1
-        }).sort({ rank: 1 }).skip(skip).limit(limit)
+        }).sort(sortExp).skip(skip).limit(limit)
     }
 
     async searchUsingSearchEngine(query: string) {
