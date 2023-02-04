@@ -109,9 +109,9 @@ const SearchPage: NextPage = () => {
             }
           </div>
           <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[500px] items-center gap-3'>
-            <div className='flex flex-col w-full justify-start text-start p-3 border-[1px]'>
+            <div className='flex flex-col w-full justify-start text-start p-4 border-[1px]'>
               <h3>Overview</h3>
-              <p className='pt-3 font-extralight text-sm'>
+              <p className='p-2 font-extralight text-sm'>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 This paper describes the design and development of low cost USB Data Acquisition System (DAS) for the measurement of physical parameters. Physical parameters such as temperature, humidity, light intensity etc., which are generally slowly varying signals are sensed by respective sensors or integrated sensors and converted into voltages. The DAS is designed using PIC18F4550 microcontroller, communicating with Personal Computer (PC) through USB (Universal Serial Bus). The designed DAS has been tested with the application program developed in Visual Basic, which allows online monitoring in graphical as well as numerical display.
               </p>
