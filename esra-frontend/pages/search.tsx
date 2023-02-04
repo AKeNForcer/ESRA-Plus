@@ -17,6 +17,7 @@ const SearchPage: NextPage = () => {
   const [hasMore, setHasMore] = useState(false);
   const [showMinimal, setShowMinimal] = useState(false);
   const [showMinimalBar, setShowMinimalBar] = useState(false);
+  const [sortBy, setSortBy] = useState("RELEVANCE");
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -30,12 +31,12 @@ const SearchPage: NextPage = () => {
     if (query){
       setRealSearchResult([]);
       const SEARCH_URL = new URL('search', origin).toString();
-      axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT } }).then(response => {
+      axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT, sort: sortBy } }).then(response => {
         setRealSearchResult(response.data.result);
         setHasMore(true);
       });
     }
-  }, [query]);
+  }, [query, sortBy]);
 
   const loadMore = async () => {
     if (query){
@@ -97,10 +98,12 @@ const SearchPage: NextPage = () => {
                 <p className=''>
                   Sort by:
                 </p>
-                <select className='flex items-center text-center justify-center h-7 w-28 border-[1px] border-gray-300'>
-                  <option value="volvo">Most relevant</option>
-                  <option value="saab">Most recent</option>
-                  <option value="mercedes">Least recent</option>
+                <select 
+                  className='flex items-center text-center justify-center h-7 w-28 border-[1px] border-gray-300'
+                  onChange={(event) => setSortBy(event.target.value)}>
+                  <option value="RELEVANCE">Most relevant</option>
+                  <option value="NEWEST">Most recent</option>
+                  <option value="OLDEST">Least recent</option>
                 </select>
               </div>
             </div>
