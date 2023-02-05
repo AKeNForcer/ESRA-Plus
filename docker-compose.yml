@@ -16,7 +16,30 @@ services:
     networks:
       - esra
       - esra-db-es
-  search:
+  search-0:
+    image: esra-search
+    restart: always
+    environment:
+      MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
+      MAIN_ELASTICSEARCH_USER: elastic
+      MAIN_ELASTICSEARCH_PASS: esra_CP44
+      DEVICE: 'cuda:0'
+      BM25_SIZE: 100
+      GPL_TSDAE_SIZE: 100
+      USE_GPL_TSDAE_COMPLETION: 'no'
+    volumes:
+      - ./esra-search/pipelines/gpl/:/esra/pipelines/gpl/
+    networks:
+      - esra
+      - esra-db-es
+    deploy:
+      resources:
+        reservations:
+          devices:
+          -  driver: nvidia
+             count: all
+             capabilities: [gpu]
+  search-1:
     image: esra-search
     restart: always
     environment:
@@ -39,11 +62,19 @@ services:
           -  driver: nvidia
              count: all
              capabilities: [gpu]
+  search-load-balancer:
+    image: esra-search-load-balancer
+    links:
+      - search-0
+      - search-1
+    restart: always
+    networks:
+      - esra
   backend:
     image: esra-backend
     restart: always
     environment:
-      SEARCH_ENGINE_URL: http://search:5000
+      SEARCH_ENGINE_URL: http://search-load-balancer
       SEARCH_ENGINE_RESULT_LIMIT: 100
       SEARCH_ENGINE_COMPLETE_LIMIT: 8
       PAPER_SERVICE_URL: http://paper:5000
@@ -68,7 +99,7 @@ services:
     links:
       - backend
       - frontend
-      - search
+      - search-load-balancer
     restart: always
     networks:
       - esra
