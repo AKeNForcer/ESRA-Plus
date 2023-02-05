@@ -2,3 +2,4 @@
 *.env
 esra-search/pipelines/gpl/*
 esra-frontend/dist/*
+.playground/*
