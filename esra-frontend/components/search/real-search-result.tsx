@@ -1,7 +1,7 @@
 import { ExpandLess, ExpandMore, Search } from "@material-ui/icons"
+import Tooltip from "@mui/material/Tooltip";
 import Link from "next/link";
 import { FunctionComponent, useState } from "react";
-
 
 
 export const RealSearchResult = (props: any) => {
@@ -89,9 +89,8 @@ export const RealSearchResult = (props: any) => {
                 {
                   explanation ?
                   explanation.map((e: {"order": number, "sentence": string, "value": number}) => {
-
                     return <>
-                      <mark className={`bg-opacity-${Math.round(e.value * 20) * 5} bg-yellow-200 text-gray-600`}>{e["sentence"]}</mark>
+                      <mark className={`bg-opacity-${Math.round(e.value * 100)} bg-yellow-200 text-gray-600`}>{e["sentence"]}</mark>
                       &nbsp;
                     </>
                   }) :
