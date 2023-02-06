@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
@@ -18,7 +18,9 @@ const SearchPage: NextPage = () => {
   const [hasMore, setHasMore] = useState(false);
   const [showMinimal, setShowMinimal] = useState(false);
   const [showMinimalBar, setShowMinimalBar] = useState(false);
-
+  const [explanation, setExplanation] = useState<{ [key: string]: { [key: string]: any } }>({});
+  const [getExplainIdle, setGetExplainIdle] = useState<boolean>(true);
+  
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
     ? new URL("api/", window.location.origin).toString()
@@ -26,13 +28,62 @@ const SearchPage: NextPage = () => {
 
   const NEXT_PUBLIC_TOTAL_RESULT_LIMIT = parseInt(process.env.NEXT_PUBLIC_TOTAL_RESULT_LIMIT ?? '100');
 
+  const getExplanation = async (idx: number, initial_query: string, explanation: { [key: string]: { [key: string]: any } }) => {
+    if (query !== initial_query) return;
+    if (idx >= realSearchResult.length) {
+      setGetExplainIdle(true);
+      console.log("get explain stopped", realSearchResult.length);
+      return;
+    }
+    const EXPLAIN_URL = new URL('explain', origin).toString();
+    const setExplain = (response: AxiosResponse<any, any>, i: number) => {
+      explanation[`${realSearchResult[i].paperId}`] = [{order: 0, sentence: `${i}: `, value: 0}, ...response.data.result];
+      console.log(i, "set explaination", realSearchResult[i].paperId)
+      setExplanation({...explanation});
+    }
+    if (!explanation[realSearchResult[idx].paperId]) {
+      console.log(idx, "send explanation request:", realSearchResult[idx].paperId);
+      axios.get(EXPLAIN_URL, { params: { query: query, paperId: realSearchResult[idx]['paperId'], wait: 45, gen: 1 } }).then(response => {
+        if (query !== initial_query) return;
+        setExplain(response, idx);
+      });
+    }
+    if (idx+1 < realSearchResult.length) {
+      if (!explanation[realSearchResult[idx+1].paperId]) {
+        console.log(idx+1, "send explanation request:", realSearchResult[idx+1].paperId);
+        axios.get(EXPLAIN_URL, { params: { query: query, paperId: realSearchResult[idx+1]['paperId'], wait: 45, gen: 1 } }).then(response => {
+          if (query !== initial_query) return;
+          setExplain(response, idx+1);
+          getExplanation(idx+2, initial_query, explanation);
+        });
+      } else {
+        getExplanation(idx+2, initial_query, explanation);
+      }
+    } else {
+      setGetExplainIdle(true);
+      console.log("get explain stopped $", realSearchResult.length);
+    }
+  }
+
+  useEffect(() => {
+    if (!getExplainIdle) {
+      getExplanation(0, query as string, {...explanation});
+    } else if (realSearchResult.length > Object.keys(explanation).length) {
+      setGetExplainIdle(false);
+    }
+  }, [getExplainIdle])
+
+  useEffect(() => {
+    setGetExplainIdle(false);
+  }, [realSearchResult]);
+
   useEffect(() => {
     console.log(`query changed: ${query}`);
     if (query){
       setRealSearchResult([]);
       setHasMore(false);
       const SEARCH_URL = new URL('search', origin).toString();
-      axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT, sort: sortBy } }).then(response => {
+      axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT, sort: sortBy } }).then(async response => {
         setRealSearchResult(response.data.result);
         setHasMore(true);
       });
@@ -42,7 +93,7 @@ const SearchPage: NextPage = () => {
   const loadMore = async () => {
     if (query){
       const SEARCH_URL = new URL('search', origin).toString();
-      axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INCREMENT_RESULT_LIMIT, skip: realSearchResult.length, sort: sortBy } }).then(response => {
+      axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INCREMENT_RESULT_LIMIT, skip: realSearchResult.length, sort: sortBy } }).then(async response => {
         const newRes = [...realSearchResult, ...response.data.result];
         if (newRes.length >= NEXT_PUBLIC_TOTAL_RESULT_LIMIT) {
           setHasMore(false);
@@ -121,7 +172,7 @@ const SearchPage: NextPage = () => {
               >
                 <ul className='flex flex-col items-center justify-center w-full gap-3'>
                   { realSearchResult.length > 0?
-                    realSearchResult.map((res) => <RealSearchResult query={query} result={res} key={res["paperId"]}/>) :
+                    realSearchResult.map((res) => <RealSearchResult query={query} result={res} key={res["paperId"]} explanation={explanation[res['paperId']]}/>) :
                     Array(NEXT_PUBLIC_TOTAL_RESULT_LIMIT).fill(<RealSearchResultLoading/>)
                   }
                 </ul>

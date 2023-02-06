@@ -5,7 +5,9 @@ import { FunctionComponent, useState } from "react";
 
 
 export const RealSearchResult = (props: any) => {
-  const { result, query } = props;
+  const { result, query, explanation } = props;
+  // console.log("explanation")
+  // console.log(explanation)
   
   const [isExpand, setIsExpand] = useState(false);
 
@@ -27,7 +29,7 @@ export const RealSearchResult = (props: any) => {
           <ul className='flex flex-wrap justify-start w-auto gap-1'>
             <li className='flex items-center justify-center px-1.5 h-7 text-xs'>arXiv ID:</li>
             <Link href={`/search?query=${result["paperId"]}`}>
-              <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs'>{result["paperId"]}</li>
+              <li className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs hover:underline'>{result["paperId"]}</li>
             </Link>
           </ul>
           {
@@ -66,23 +68,43 @@ export const RealSearchResult = (props: any) => {
       </Link>
       <div className='flex flex-col show-logo:flex-row items-start justify-center text-left w-full px-1.5 text-sm pb-3 gap-3'>
         <h5>Explanation:</h5>
-        <p className="font-extralight">
+        <p className="font-extralight w-full">
           {
             (() => {
               const res: [string] = result['abstract'].split(" ");
+              // return <>
+              //   {
+              //     res.slice(0, Math.min(res.length, isExpand ? res.length : 50))
+              //       .join(" ") + 
+              //       ((!isExpand) && res.length > 50 ? " ... " : "")
+              //   }
+              //   {
+              //     (!isExpand) && res.length > 50 ?
+              //     <a className="text-cyan-800 font-normal hover:underline hover:cursor-pointer" onClick={() => setIsExpand(true)}>
+              //       more
+              //     </a> : null
+              //   }
+              // </>;
               return <>
                 {
-                  res.slice(0, Math.min(res.length, isExpand ? res.length : 50))
-                    .join(" ") + 
-                    ((!isExpand) && res.length > 50 ? " ... " : "")
+                  explanation ?
+                  explanation.map((e: {"order": number, "sentence": string, "value": number}) => {
+
+                    return <>
+                      <mark className={`bg-opacity-${Math.round(e.value * 20) * 5} bg-yellow-200 text-gray-600`}>{e["sentence"]}</mark>
+                      &nbsp;
+                    </>
+                  }) :
+                  <div className="flex w-full animate-pulse">
+                    <h3 className='flex flex-col items-start justify-start text-left w-full px-1.5 text-base font-semibold pt-1.5 gap-2'>
+                      <div className="h-3 w-full bg-gray-200 rounded-full"></div>
+                      <div className="h-3 w-10/12 bg-gray-200 rounded-full"></div>
+                      <div className="h-3 w-11/12 bg-gray-200 rounded-full"></div>
+                      <div className="h-3 w-1/3 bg-gray-200 rounded-full"></div>
+                    </h3>
+                  </div>
                 }
-                {
-                  (!isExpand) && res.length > 50 ?
-                  <a className="text-cyan-800 font-normal hover:underline hover:cursor-pointer" onClick={() => setIsExpand(true)}>
-                    more
-                  </a> : null
-                }
-              </>;
+              </>
             })()
           }
         </p>
