@@ -30,4 +30,4 @@ COPY . .
 ENV FLASK_ENV=production
 ENV FLASK_DEBUG=0
 
-CMD ["python", "paper_service.py"]
+CMD ["python", "explain_controller.py"]

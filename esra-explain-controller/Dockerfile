@@ -27,7 +27,8 @@ RUN pip install --upgrade elasticsearch==8.5.3
 
 COPY . .
 
+ENV FLASK_APP=paper_service
 ENV FLASK_ENV=production
 ENV FLASK_DEBUG=0
 
-CMD ["python", "paper_service.py"]
+CMD ["python", "explain_controller.py"]

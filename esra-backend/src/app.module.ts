@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PaperModule } from './paper/paper.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ExplainModule } from './explain/explain.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
     ConfigModule.forRoot(),
     SearchModule,
-    PaperModule
+    PaperModule,
+    ExplainModule
   ],
   controllers: [AppController],
   providers: [AppService],
