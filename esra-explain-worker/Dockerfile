@@ -30,4 +30,6 @@ COPY . .
 ENV FLASK_ENV=production
 ENV FLASK_DEBUG=0
 
-CMD ["python", "explain_controller.py"]
+RUN python ./utils/setup-nltk.py
+
+CMD ["python", "explain_worker.py"]

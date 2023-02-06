@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 from gevent.pywsgi import WSGIServer
 from datetime import datetime, timedelta
+from utils.explain import ExplainService
 
 import pymongo
 import pytz
@@ -29,6 +30,8 @@ mongo_client = pymongo.MongoClient(os.getenv('MONGODB_URI'))
 db = mongo_client[f"esra_plus"].with_options(codec_options=CodecOptions(tz_aware=True,tzinfo=pytz.utc))
 explain_col = db["explanations"]
 
+exps = ExplainService(DEVICE)
+
 def get_paper_abstract(paper_id):
     es_res = main_es.search(
         index="papers", 
@@ -48,17 +51,32 @@ def gen_explain():
     query = request.json["query"]
     if explain_col.find_one(dict(query=query, paperId=paper_id), {'_id': 1}):
         return "existed"
-    for _ in range(300000000):
-        pass
+    
+    try:
+        paper = main_es.search(
+            index="papers", 
+            query= {
+                "match_phrase": { "id": paper_id }
+            },
+            _source=True, 
+            size=1
+        )["hits"]["hits"][0]['_source']
+    except IndexError:
+        return "not found"
+
+    explain_paragraph = exps.explain(
+        query,
+        f"( id: {paper['id']} | authors: {paper['authors']} | title: {paper['title']}) {paper['abstract']}"
+    )
+    explanation = exps.highlight(query, explain_paragraph)
+
+    # exps.explain()
     explain_col.insert_one({
         "created_date": datetime.utcnow(),
         "expire_date": datetime.utcnow() + EXPIRE_DURATION,
         "query": query,
         "paperId": paper_id,
-        "explanation": [
-            dict(order=1, value=0.7, sentence='This paper describes the design and development of low cost USB Data Acquisition System (DAS) for the measurement of physical parameters.'),
-            dict(order=2, value=0.3, sentence='which allows online monitoring in graphical as well as numerical display.')
-        ]
+        "explanation": explanation
     })
     return "success"
 

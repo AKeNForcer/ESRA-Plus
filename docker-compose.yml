@@ -16,6 +16,7 @@ services:
     networks:
       - esra
       - esra-db-es
+  
   search-0:
     image: esra-search
     restart: always
@@ -70,6 +71,60 @@ services:
     restart: always
     networks:
       - esra
+  
+  explain-worker-0:
+    image: esra-explain-worker
+    restart: always
+    environment:
+      DEVICE: 'cuda:0'
+      MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
+      MAIN_ELASTICSEARCH_USER: elastic
+      MAIN_ELASTICSEARCH_PASS: esra_CP44
+      MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
+      EXPIRE_DURATION: 300000
+      PORT: 5559
+    networks:
+      - esra
+      - esra-db-es
+    deploy:
+      resources:
+        reservations:
+          devices:
+          -  driver: nvidia
+             count: all
+             capabilities: [gpu]
+  explain-worker-1:
+    image: esra-explain-worker
+    restart: always
+    environment:
+      DEVICE: 'cuda:1'
+      MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
+      MAIN_ELASTICSEARCH_USER: elastic
+      MAIN_ELASTICSEARCH_PASS: esra_CP44
+      MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
+      EXPIRE_DURATION: 300000
+      PORT: 5559
+    networks:
+      - esra
+      - esra-db-es
+    deploy:
+      resources:
+        reservations:
+          devices:
+          -  driver: nvidia
+             count: all
+             capabilities: [gpu]
+  explain-controller:
+    image: esra-explain-controller
+    restart: always
+    environment:
+      WORKERS_URL: '"http://explain-worker-0:5559/","http://explain-worker-1:5559/"'
+      WORK_LIMIT: 2
+      PORT: 5559
+    networks:
+      - esra
+      - esra-db-es
+
   backend:
     image: esra-backend
     restart: always
@@ -81,7 +136,7 @@ services:
       MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
       MONGODB_DB_NAME: esra_plus
       QUERY_EXPIRE_DURATION: 300000
-      EXPLAIN_URL: http://explain-controller:5555
+      EXPLAIN_URL: http://explain-controller:5559
     networks:
       - esra
       - esra-db-es
@@ -95,6 +150,7 @@ services:
       NEXT_PUBLIC_INITIAL_RESULT_LIMIT: 10
       NEXT_PUBLIC_INCREMENT_RESULT_LIMIT: 10
       NEXT_PUBLIC_TOTAL_RESULT_LIMIT: 100
+  
   gateway:
     image: esra-nginx
     links:
