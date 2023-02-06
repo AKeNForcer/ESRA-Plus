@@ -20,6 +20,7 @@ const SearchPage: NextPage = () => {
   const [showMinimalBar, setShowMinimalBar] = useState(false);
   const [explanation, setExplanation] = useState<{ [key: string]: { [key: string]: any } }>({});
   const [getExplainIdle, setGetExplainIdle] = useState<boolean>(true);
+  const [getExplainIdleProbe, setGetExplainIdleProbe] = useState<boolean>(true);
   
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -30,8 +31,9 @@ const SearchPage: NextPage = () => {
 
   const getExplanation = async (idx: number, initial_query: string, explanation: { [key: string]: { [key: string]: any } }) => {
     if (query !== initial_query) return;
+    setGetExplainIdleProbe(false);
     if (idx >= realSearchResult.length) {
-      setGetExplainIdle(true);
+      setGetExplainIdleProbe(true);
       console.log("get explain stopped", realSearchResult.length);
       return;
     }
@@ -60,21 +62,28 @@ const SearchPage: NextPage = () => {
         getExplanation(idx+2, initial_query, explanation);
       }
     } else {
-      setGetExplainIdle(true);
+      setGetExplainIdleProbe(true);
       console.log("get explain stopped $", realSearchResult.length);
     }
   }
 
   useEffect(() => {
-    if (!getExplainIdle) {
+    if (getExplainIdleProbe) {
+      if (realSearchResult.length > Object.keys(explanation).length) {
+        setGetExplainIdle(!getExplainIdle);
+      }
+    }
+  }, [getExplainIdleProbe])
+
+  useEffect(() => {
+    if (getExplainIdleProbe) {
       getExplanation(0, query as string, {...explanation});
-    } else if (realSearchResult.length > Object.keys(explanation).length) {
-      setGetExplainIdle(false);
     }
   }, [getExplainIdle])
 
   useEffect(() => {
-    setGetExplainIdle(false);
+    console.log("real search result change", getExplainIdle);
+    setGetExplainIdle(!getExplainIdle);
   }, [realSearchResult]);
 
   useEffect(() => {
@@ -118,7 +127,7 @@ const SearchPage: NextPage = () => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-first">
       <Head>
-        <title>ESRA+ search result</title>
+        <title>{getExplainIdleProbe} ESRA+ search result</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
