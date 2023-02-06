@@ -98,7 +98,7 @@ export const SearchComponent = (props: any) => {
               onFocus={() => setIsFocused(true)}
               onClick={() => setIsFocused(true)}
               value={query}
-              placeholder="serch by keyword or context"
+              placeholder="search by keyword or context"
             />
             {
               isFocused && query.length > 0 ?

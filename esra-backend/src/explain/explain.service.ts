@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Cron } from '@nestjs/schedule';
 import { Model, Types } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
-import { Explaination, ExplainationDocument, FactList, FactListDocument, Overview, OverviewDocument } from './explain.model';
+import { Explanation, ExplanationDocument, FactList, FactListDocument, Overview, OverviewDocument } from './explain.model';
 
 @Injectable()
 export class ExplainService {
@@ -15,7 +15,7 @@ export class ExplainService {
     constructor (
         private readonly configService: ConfigService,
         private readonly httpService: HttpService,
-        @InjectModel(Explaination.name) private explainationModel: Model<ExplainationDocument>,
+        @InjectModel(Explanation.name) private explanationModel: Model<ExplanationDocument>,
         @InjectModel(Overview.name) private overviewModel: Model<OverviewDocument>,
         @InjectModel(FactList.name) private factListModel: Model<FactListDocument>) {
             this.explainUrl = new URL("explain", this.configService.get<string>('EXPLAIN_URL')).toString();
@@ -23,13 +23,13 @@ export class ExplainService {
             this.factListUrl = new URL("factlist", this.explainUrl).toString();
         }
 
-    async getExplaination(query: string, paperId: string): Promise<[{ order: number, sentence: string, value: number }] | null> {
-        const explaination = await this.explainationModel.findOne({query, paperId}, {_id: 0, explaination: 1});
-        return explaination ? explaination.explaination : null;
+    async getExplanation(query: string, paperId: string): Promise<[{ order: number, sentence: string, value: number }] | null> {
+        const explanation = await this.explanationModel.findOne({query, paperId}, {_id: 0, explanation: 1});
+        return explanation ? explanation.explanation : null;
     }
 
-    async generateExplaination(query: string, paperId: string): Promise<void> {
-        if (await this.explainationModel.exists({query, paperId})) {
+    async generateExplanation(query: string, paperId: string): Promise<void> {
+        if (await this.explanationModel.exists({query, paperId})) {
             return
         }
         await firstValueFrom(
@@ -39,6 +39,6 @@ export class ExplainService {
 
     @Cron("*/10 * * * * *")
     async clean() {
-        await this.explainationModel.deleteMany({ expire_date: { $lte: new Date() } });
+        await this.explanationModel.deleteMany({ expire_date: { $lte: new Date() } });
     }
 }

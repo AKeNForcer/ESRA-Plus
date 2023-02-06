@@ -27,11 +27,11 @@ export class ExplainController {
                 HttpStatus.NOT_FOUND);
         }
         if (gen) {
-            this.explainService.generateExplaination(query, paperId);
+            this.explainService.generateExplanation(query, paperId);
         }
         let result: [{order: number, sentence: string, value: number}] | null = null;
         for (; !result && wait > 0; wait-=0.5) {
-            result = await this.explainService.getExplaination(query, paperId);
+            result = await this.explainService.getExplanation(query, paperId);
             if (result) break;
             await new Promise(r => setTimeout(r,500));
         }

@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 @Schema()
-export class Explaination {
+export class Explanation {
   @Prop({ default: new Date() })
   created_date: Date;
 
@@ -16,10 +16,10 @@ export class Explaination {
   paperId: string;
 
   @Prop({ type: [Object], required: true })
-  explaination: [{ order: number, sentence: string, value: number }];
+  explanation: [{ order: number, sentence: string, value: number }];
 }
-export type ExplainationDocument = Explaination & Document;
-export const ExplainationSchema = SchemaFactory.createForClass(Explaination);
+export type ExplanationDocument = Explanation & Document;
+export const ExplanationSchema = SchemaFactory.createForClass(Explanation);
 
 @Schema()
 export class Overview {

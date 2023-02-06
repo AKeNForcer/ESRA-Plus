@@ -27,7 +27,7 @@ main_es = Elasticsearch(**ES_ARGS)
 
 mongo_client = pymongo.MongoClient(os.getenv('MONGODB_URI'))
 db = mongo_client[f"esra_plus"].with_options(codec_options=CodecOptions(tz_aware=True,tzinfo=pytz.utc))
-explain_col = db["explainations"]
+explain_col = db["explanations"]
 
 def get_paper_abstract(paper_id):
     es_res = main_es.search(
@@ -55,7 +55,7 @@ def gen_explain():
         "expire_date": datetime.utcnow() + EXPIRE_DURATION,
         "query": query,
         "paperId": paper_id,
-        "explaination": [
+        "explanation": [
             dict(order=1, value=0.7, sentence='This paper describes the design and development of low cost USB Data Acquisition System (DAS) for the measurement of physical parameters.'),
             dict(order=2, value=0.3, sentence='which allows online monitoring in graphical as well as numerical display.')
         ]

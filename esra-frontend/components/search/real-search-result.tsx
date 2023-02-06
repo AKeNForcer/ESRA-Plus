@@ -65,7 +65,7 @@ export const RealSearchResult = (props: any) => {
         </h3>
       </Link>
       <div className='flex flex-col show-logo:flex-row items-start justify-center text-left w-full px-1.5 text-sm pb-3 gap-3'>
-        <h5>Explaination:</h5>
+        <h5>Explanation:</h5>
         <p className="font-extralight">
           {
             (() => {
