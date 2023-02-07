@@ -75,6 +75,8 @@ services:
   explain-worker-0:
     image: esra-explain-worker
     restart: always
+    volumes:
+      - ./esra-explain-worker/models/:/esra/models/
     environment:
       DEVICE: 'cuda:0'
       MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
@@ -96,6 +98,8 @@ services:
   explain-worker-1:
     image: esra-explain-worker
     restart: always
+    volumes:
+      - ./esra-explain-worker/models/:/esra/models/
     environment:
       DEVICE: 'cuda:1'
       MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200

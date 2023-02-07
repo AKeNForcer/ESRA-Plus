@@ -6,11 +6,19 @@ import os
 from gevent.pywsgi import WSGIServer
 from datetime import datetime, timedelta
 from utils.explain import ExplainService
+import os
+import torch
+
+load_dotenv()
+DEVICE = os.environ['DEVICE'] if 'DEVICE' in os.environ else 'cuda'
+if 'cuda' in DEVICE:
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0' if DEVICE == 'cuda' else DEVICE.strip('cuda:')
+    print(torch.cuda.device_count(), torch.cuda.get_device_name(0))
+    DEVICE = 'cuda'
 
 import pymongo
 import pytz
 
-load_dotenv()
 EXPIRE_DURATION = timedelta(milliseconds=int(os.environ['EXPIRE_DURATION']))
 ES_ARGS = dict(
     hosts=os.environ['MAIN_ELASTICSEARCH_HOST'],
@@ -19,7 +27,6 @@ ES_ARGS = dict(
         os.environ['MAIN_ELASTICSEARCH_PASS'],
     )
 )
-DEVICE = os.environ['DEVICE'] if 'DEVICE' in os.environ else 'cuda'
 
 HOST = os.environ['HOST'] if 'HOST' in os.environ else ''
 PORT = int(os.environ['PORT']) if 'PORT' in os.environ else 5000
@@ -30,7 +37,10 @@ mongo_client = pymongo.MongoClient(os.getenv('MONGODB_URI'))
 db = mongo_client[f"esra_plus"].with_options(codec_options=CodecOptions(tz_aware=True,tzinfo=pytz.utc))
 explain_col = db["explanations"]
 
-exps = ExplainService(DEVICE)
+if DEVICE == 'cuda':
+    exps = ExplainService()
+else:
+    exps = ExplainService(DEVICE)
 
 def get_paper_abstract(paper_id):
     es_res = main_es.search(
