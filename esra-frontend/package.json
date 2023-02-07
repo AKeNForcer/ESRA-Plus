@@ -10,6 +10,7 @@
     "@emotion/styled": "^11.10.5",
     "@material-ui/icons": "^4.11.3",
     "@mui/material": "^5.11.6",
+    "async-mutex": "^0.4.0",
     "axios": "^1.2.3",
     "next": "latest",
     "react": "18.2.0",

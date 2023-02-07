@@ -2,13 +2,14 @@ import axios, { AxiosResponse } from 'axios'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { RealSearchResult } from '../components/search/real-search-result'
 import { RealSearchResultLoading } from '../components/search/real-search-result-loading'
 import { SearchComponent } from '../components/search/search-component'
 import InfiniteScroll from "react-infinite-scroll-component";
 import { HeadLogo } from '../components/head-logo'
 import { ExpandMore } from '@material-ui/icons'
+const Mutex = require("async-mutex").Mutex;
 
 const SearchPage: NextPage = () => {
   const router = useRouter();
@@ -18,7 +19,7 @@ const SearchPage: NextPage = () => {
   const [hasMore, setHasMore] = useState(false);
   const [showMinimal, setShowMinimal] = useState(false);
   const [showMinimalBar, setShowMinimalBar] = useState(false);
-  const [explanation, setExplanation] = useState<{ [key: string]: { [key: string]: any } }>({});
+  const [explanation, setExplanation] = useState<{ [key: string]: any }>({});
   const [getExplainIdle, setGetExplainIdle] = useState<boolean>(true);
   const [getExplainIdleProbe, setGetExplainIdleProbe] = useState<boolean>(true);
   
@@ -28,8 +29,9 @@ const SearchPage: NextPage = () => {
     : '' );
 
   const NEXT_PUBLIC_TOTAL_RESULT_LIMIT = parseInt(process.env.NEXT_PUBLIC_TOTAL_RESULT_LIMIT ?? '100');
+  const mutex = useRef(new Mutex());
 
-  const getExplanation = async (idx: number, initial_query: string, explanation: { [key: string]: { [key: string]: any } }) => {
+  const getExplanation = async (idx: number, initial_query: string, explanation: { [key: string]: any }) => {
     if (query !== initial_query) return;
     setGetExplainIdleProbe(false);
     if (idx >= realSearchResult.length) {
@@ -44,31 +46,48 @@ const SearchPage: NextPage = () => {
       setExplanation({...explanation});
     }
     if (!explanation[realSearchResult[idx].paperId]) {
+      explanation[realSearchResult[idx].paperId] = null;
+      setExplanation({...explanation});
       console.log(idx, "send explanation request:", realSearchResult[idx].paperId);
       axios.get(EXPLAIN_URL, { params: { query: query, paperId: realSearchResult[idx]['paperId'], wait: 45, gen: 1 } }).then(response => {
         if (query !== initial_query) return;
-        setExplain(response, idx);
+        mutex.current.runExclusive(async function () {
+          setExplain(response, idx);
+          if (idx+1 >= realSearchResult.length || explanation[realSearchResult[idx+1].paperId]) {
+            console.log("get explain stopped #0", realSearchResult.length, Object.keys(explanation).length, getExplainIdleProbe);
+            setGetExplainIdleProbe(true);
+          }
+        });
       });
     }
     if (idx+1 < realSearchResult.length) {
       if (!explanation[realSearchResult[idx+1].paperId]) {
+        explanation[realSearchResult[idx+1].paperId] = null;
+        setExplanation({...explanation});
         console.log(idx+1, "send explanation request:", realSearchResult[idx+1].paperId);
         axios.get(EXPLAIN_URL, { params: { query: query, paperId: realSearchResult[idx+1]['paperId'], wait: 45, gen: 1 } }).then(response => {
           if (query !== initial_query) return;
-          setExplain(response, idx+1);
-          getExplanation(idx+2, initial_query, explanation);
+          mutex.current.runExclusive(async function () {
+            setExplain(response, idx+1);
+            if (explanation[realSearchResult[idx].paperId]) {
+              console.log("get explain stopped #1", realSearchResult.length, Object.keys(explanation).length, getExplainIdleProbe);
+              setGetExplainIdleProbe(true);
+            }
+          });
         });
       } else {
-        getExplanation(idx+2, initial_query, explanation);
+        console.log("get explain stopped #2", realSearchResult.length, Object.keys(explanation).length, getExplainIdleProbe);
+        setGetExplainIdleProbe(true);
       }
     } else {
-      setGetExplainIdleProbe(true);
       console.log("get explain stopped $", realSearchResult.length);
+      setGetExplainIdleProbe(true);
     }
   }
 
   useEffect(() => {
     if (getExplainIdleProbe) {
+      console.log(getExplainIdleProbe, realSearchResult.length, Object.keys(explanation).length)
       if (realSearchResult.length > Object.keys(explanation).length) {
         setGetExplainIdle(!getExplainIdle);
       }
@@ -77,13 +96,18 @@ const SearchPage: NextPage = () => {
 
   useEffect(() => {
     if (getExplainIdleProbe) {
-      getExplanation(0, query as string, {...explanation});
+      for (let i=0; i<realSearchResult.length; i++) {
+        if (explanation[realSearchResult[i].paperId] === undefined) {
+          getExplanation(i, query as string, {...explanation});
+          break
+        }
+      }
     }
   }, [getExplainIdle])
 
   useEffect(() => {
     console.log("real search result change", getExplainIdle);
-    setGetExplainIdle(!getExplainIdle);
+    if (getExplainIdleProbe) setGetExplainIdle(!getExplainIdle);
   }, [realSearchResult]);
 
   useEffect(() => {
