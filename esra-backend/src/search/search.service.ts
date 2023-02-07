@@ -76,6 +76,11 @@ export class SearchService {
         return data;
     }
 
+    async getSearchRank(query: string, paperId: string): Promise<number | null> {
+        const res = await this.searchResultModel.findOne({ query, paperId }, { _id: 0, rank: 1 })
+        return res ? res.rank : null
+    }
+
     @Cron("*/10 * * * * *")
     async clean() {
         await this.searchResultModel.deleteMany({ expire_date: { $lte: new Date() } });

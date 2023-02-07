@@ -6,6 +6,7 @@ import { Explanation, ExplanationSchema, FactList, FactListSchema, Overview, Ove
 import { ExplainService } from './explain.service';
 import { ExplainController } from './explain.controller';
 import { PaperModule } from 'src/paper/paper.module';
+import { SearchModule } from 'src/search/search.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { PaperModule } from 'src/paper/paper.module';
       { name: Overview.name, schema: OverviewSchema },
       { name: FactList.name, schema: FactListSchema }
     ]),
-    PaperModule
+    PaperModule,
+    SearchModule
   ],
   providers: [ExplainService],
   controllers: [ExplainController]

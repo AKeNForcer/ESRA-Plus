@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Cron } from '@nestjs/schedule';
 import { Model, Types } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
+import { SearchService } from 'src/search/search.service';
 import { Explanation, ExplanationDocument, FactList, FactListDocument, Overview, OverviewDocument } from './explain.model';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class ExplainService {
     constructor (
         private readonly configService: ConfigService,
         private readonly httpService: HttpService,
+        private readonly searchService: SearchService,
         @InjectModel(Explanation.name) private explanationModel: Model<ExplanationDocument>,
         @InjectModel(Overview.name) private overviewModel: Model<OverviewDocument>,
         @InjectModel(FactList.name) private factListModel: Model<FactListDocument>) {
@@ -32,8 +34,9 @@ export class ExplainService {
         if (await this.explanationModel.exists({query, paperId})) {
             return
         }
+        const rank = (await this.searchService.getSearchRank(query, paperId)) ?? 20;
         await firstValueFrom(
-            this.httpService.post(this.explainUrl, [{query, paperId}])
+            this.httpService.post(this.explainUrl, [{query, paperId, rank}])
         );
     }
 

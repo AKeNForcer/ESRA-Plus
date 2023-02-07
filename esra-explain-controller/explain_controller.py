@@ -66,7 +66,11 @@ app = Flask(__name__)
 def gen_explain():
     payloads = request.json
     for payload in payloads:
-        exp_controller.submit_work(1, "explain", payload)
+        if "rank" not in payload:
+            return "rank is required", 400
+    for payload in payloads:
+        print("submit:", payload)
+        exp_controller.submit_work(payload["rank"], "explain", payload)
     return "success"
 
 if __name__ == '__main__':
