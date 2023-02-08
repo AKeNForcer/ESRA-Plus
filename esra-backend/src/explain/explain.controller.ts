@@ -17,8 +17,8 @@ export class ExplainController {
         if (Number.isNaN(wait)) {
             throw new HttpException(responseJson(`wait must be integer`, null, null, false), HttpStatus.BAD_REQUEST);
         }
-        if (wait >= 60 || wait < 0) {
-            throw new HttpException(responseJson(`wait (${wait}) must be in range [0, 60]`), HttpStatus.BAD_REQUEST);
+        if (wait >= 360 || wait < 0) {
+            throw new HttpException(responseJson(`wait (${wait}) must be in range [0, 360]`), HttpStatus.BAD_REQUEST);
         }
         gen = gen === '1';
         if (!(await this.paperService.paperExists(paperId))) {
