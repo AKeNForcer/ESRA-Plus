@@ -22,6 +22,7 @@ const SearchPage: NextPage = () => {
   const [explanation, setExplanation] = useState<{ [key: string]: any }>({});
   const [getExplainIdle, setGetExplainIdle] = useState<boolean>(true);
   const [getExplainIdleProbe, setGetExplainIdleProbe] = useState<boolean>(true);
+  const [found409, setFound409] = useState<boolean>(false);
   
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -45,6 +46,9 @@ const SearchPage: NextPage = () => {
       console.log(i, "set explanation", realSearchResult[i].paperId)
       setExplanation({...explanation});
     }
+    const trig409 = () => {
+      setFound409(true);
+    }
     if (!explanation[realSearchResult[idx].paperId]) {
       explanation[realSearchResult[idx].paperId] = null;
       setExplanation({...explanation});
@@ -58,6 +62,9 @@ const SearchPage: NextPage = () => {
             setGetExplainIdleProbe(true);
           }
         });
+      }).catch((error) =>{
+        if (error.status === 409) trig409();
+        else throw error;
       });
     }
     if (idx+1 < realSearchResult.length) {
@@ -74,7 +81,11 @@ const SearchPage: NextPage = () => {
               setGetExplainIdleProbe(true);
             }
           });
-        });
+        }).catch((error) =>{
+          if (error.response.status === 409 ||
+              error.response.status === 503) trig409();
+          else throw error;
+        });;
       } else {
         console.log("get explain stopped #2", realSearchResult.length, Object.keys(explanation).length, getExplainIdleProbe);
         setGetExplainIdleProbe(true);
@@ -148,6 +159,12 @@ const SearchPage: NextPage = () => {
     };
   }, []);
 
+  const retryLoadExplaination = () => {
+    console.log("retry")
+    setGetExplainIdle(!getExplainIdle);
+    setFound409(false);
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-first">
       <Head>
@@ -205,7 +222,13 @@ const SearchPage: NextPage = () => {
               >
                 <ul className='flex flex-col items-center justify-center w-full gap-3'>
                   { realSearchResult.length > 0?
-                    realSearchResult.map((res) => <RealSearchResult query={query} result={res} key={res["paperId"]} explanation={explanation[res['paperId']]}/>) :
+                    realSearchResult.map((res) => <RealSearchResult 
+                      query={query} 
+                      result={res} 
+                      key={res["paperId"]} 
+                      explanation={explanation[res['paperId']]} 
+                      found409={found409} 
+                      tryAgainCallback={retryLoadExplaination}/>) :
                     Array(NEXT_PUBLIC_TOTAL_RESULT_LIMIT).fill(<RealSearchResultLoading/>)
                   }
                 </ul>

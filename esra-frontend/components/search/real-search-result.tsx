@@ -5,7 +5,7 @@ import { FunctionComponent, useState } from "react";
 
 
 export const RealSearchResult = (props: any) => {
-  const { result, query, explanation } = props;
+  const { result, query, explanation, found409, tryAgainCallback } = props;
   // console.log("explanation")
   // console.log(explanation)
   
@@ -72,19 +72,6 @@ export const RealSearchResult = (props: any) => {
           {
             (() => {
               const res: [string] = result['abstract'].split(" ");
-              // return <>
-              //   {
-              //     res.slice(0, Math.min(res.length, isExpand ? res.length : 50))
-              //       .join(" ") + 
-              //       ((!isExpand) && res.length > 50 ? " ... " : "")
-              //   }
-              //   {
-              //     (!isExpand) && res.length > 50 ?
-              //     <a className="text-cyan-800 font-normal hover:underline hover:cursor-pointer" onClick={() => setIsExpand(true)}>
-              //       more
-              //     </a> : null
-              //   }
-              // </>;
               return <>
                 {
                   explanation ?
@@ -94,14 +81,20 @@ export const RealSearchResult = (props: any) => {
                       &nbsp;
                     </>
                   }) :
-                  <div className="flex w-full animate-pulse">
-                    <h3 className='flex flex-col items-start justify-start text-left w-full px-1.5 text-base font-semibold pt-1.5 gap-2'>
-                      <div className="h-3 w-full bg-gray-200 rounded-full"></div>
-                      <div className="h-3 w-10/12 bg-gray-200 rounded-full"></div>
-                      <div className="h-3 w-11/12 bg-gray-200 rounded-full"></div>
-                      <div className="h-3 w-1/3 bg-gray-200 rounded-full"></div>
-                    </h3>
-                  </div>
+                  (
+                    found409 ?
+                    <div className="flex w-full text-red-500">
+                      Sorry, our services is now busy &nbsp; <a className="font-semibold text-cyan-800 hover:underline hover:cursor-pointer" onClick={tryAgainCallback}>retry</a>
+                    </div> :
+                    <div className="flex w-full animate-pulse">
+                      <h3 className='flex flex-col items-start justify-start text-left w-full px-1.5 text-base font-semibold pt-1.5 gap-2'>
+                        <div className="h-3 w-full bg-gray-200 rounded-full"></div>
+                        <div className="h-3 w-10/12 bg-gray-200 rounded-full"></div>
+                        <div className="h-3 w-11/12 bg-gray-200 rounded-full"></div>
+                        <div className="h-3 w-1/3 bg-gray-200 rounded-full"></div>
+                      </h3>
+                    </div>
+                  )
                 }
               </>
             })()
