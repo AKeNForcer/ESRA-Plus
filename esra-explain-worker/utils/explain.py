@@ -24,7 +24,7 @@ class ExplainService:
         self.model_CE = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512, device=device)
         self.tokenizer_sentence = nltk.data.load('tokenizers/punkt/english.pickle')
 
-    def _filter(self, output, end_token='<extra_id_1>'):
+    def _filter(self, output, _result_prefix, _result_suffix, end_token='<extra_id_1>'):
         # The first token is <unk> (inidex at 0) and the second token is <extra_id_0> (indexed at 32099)
         _txt = self.T5_arxiv_tokenizer.decode(output[2:], skip_special_tokens=False, clean_up_tokenization_spaces=False)
         if end_token in _txt:
@@ -44,14 +44,14 @@ class ExplainService:
                 qualified_sentences.append(sentences[i])
         
         input_ids = self.tokenizer_T5.encode(abstract, return_tensors = 'pt')
-        outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.95, num_return_sequences = 10)
+        outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.95, num_return_sequences = 5)
 
         questions = []
         for i in range(len(outputs)):
             questions.append([query, self.tokenizer_T5.decode(outputs[i], skip_special_tokens = True)])
         for sentence in qualified_sentences:
             input_ids = self.tokenizer_T5.encode(sentence, return_tensors = 'pt')
-            outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.80, num_return_sequences = 10)
+            outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.90, num_return_sequences = 3)
             for i in range(len(outputs)):
                 questions.append([query, self.tokenizer_T5.decode(outputs[i], skip_special_tokens = True)])
         
@@ -69,7 +69,7 @@ class ExplainService:
             max_length=256,
             do_sample=False, 
             early_stopping=False,
-            num_beams=10,
+            num_beams=8,
             temperature=12,
             top_k=None,
             top_p=0.97,
@@ -99,13 +99,16 @@ class ExplainService:
                 num_beams=30,
                 num_return_sequences=10,
                 max_length=30)
+            
+            try:
+                _0_index = ans.index('<extra_id_0>')
+                _result_prefix = ans[:_0_index]
+                _result_suffix = ans[_0_index+12:]  # 12 is the length of <extra_id_0>
 
-            _0_index = ans.index('<extra_id_0>')
-            _result_prefix = ans[:_0_index]
-            _result_suffix = ans[_0_index+12:]  # 12 is the length of <extra_id_0>
-
-            results = list(map(self._filter, outputs))
-            ans = [results[0]]
+                results = [self._filter(o, _result_prefix, _result_suffix) for o in outputs]
+                ans = [results[0]]
+            except ValueError:
+                pass
         
         sentences = self.tokenizer_sentence.tokenize(ans[0])
         for i in range(len(sentences)):
@@ -114,6 +117,8 @@ class ExplainService:
             if len(find) > 12 :
                 sentences[i] = ''
 
+        sentences = [best_gen_question[1], *sentences]
+        
         if join:
             return ' '.join(sentences)
         return sentences
