@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Cron } from '@nestjs/schedule';
+import { Mutex } from 'async-mutex';
 import { Model } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
 import { SearchResult, SearchResultDocument } from './search.model';
@@ -15,6 +16,8 @@ export class SearchService {
     searchResultExpireDuration: number;
     completeUrl: string;
     searchEngineCompleteLimit: number;
+    searchMutex = new Mutex();
+    searchInProgress = {};
 
     constructor(
         private readonly configService: ConfigService,
@@ -27,21 +30,41 @@ export class SearchService {
         this.searchUrl = new URL("search", this.searchEngineUrl).toString();
         this.completeUrl = new URL("complete", this.searchEngineUrl).toString();
         this.searchResultExpireDuration = parseInt(this.configService.get<string>('QUERY_EXPIRE_DURATION'));
-
     }
 
     async search(query: string, no_cache: boolean, limit: number, skip: number, sortExp: { [key: string]: any } = { rank: 1 }): Promise<object> {
         const resCount = await this.searchResultModel.count({ query, expire_date: { $gt: new Date() } });
         if(no_cache || resCount < this.searchEngineResultLimit) {
-            const [searchResult, _] = await Promise.all([
-                this.searchUsingSearchEngine(query),
-                this.searchResultModel.deleteMany({ query })
-            ]);
-            const expire_date = new Date((new Date()).getTime() + this.searchResultExpireDuration);
-            await this.searchResultModel.insertMany(searchResult.map((x) => {
-                x["update_date"] = new Date(x["update_date"])
-                return {expire_date, query, ...x}
-            } ))
+            const inProg = {inProg: false};
+            await this.searchMutex.runExclusive(async () => {
+                if (this.searchInProgress[query]) {
+                    inProg.inProg = true;
+                }
+                else {
+                    this.searchInProgress[query] = true;
+                }
+            });
+            if (!inProg.inProg) {
+                const [searchResult, _] = await Promise.all([
+                    this.searchUsingSearchEngine(query),
+                    this.searchResultModel.deleteMany({ query })
+                ]);
+                const expire_date = new Date((new Date()).getTime() + this.searchResultExpireDuration);
+                await this.searchResultModel.insertMany(searchResult.map((x) => {
+                    x["update_date"] = new Date(x["update_date"])
+                    return {expire_date, query, ...x}
+                } ));
+                await this.searchMutex.runExclusive(async () => {
+                    delete this.searchInProgress[query];
+                });
+            } else {
+                while (inProg.inProg) {
+                    await this.searchMutex.runExclusive(async () => {
+                        inProg.inProg = this.searchInProgress[query];
+                    });
+                    await new Promise(r => setTimeout(r,200));
+                }
+            }
         }
         return this.searchResultModel.find({ query }, { 
             _id: 0,
