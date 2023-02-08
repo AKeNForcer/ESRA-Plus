@@ -42,7 +42,7 @@ const SearchPage: NextPage = () => {
     const EXPLAIN_URL = new URL('explain', origin).toString();
     const setExplain = (response: AxiosResponse<any, any>, i: number) => {
       explanation[`${realSearchResult[i].paperId}`] = [{order: 0, sentence: `${i}: `, value: 0}, ...response.data.result];
-      console.log(i, "set explaination", realSearchResult[i].paperId)
+      console.log(i, "set explanation", realSearchResult[i].paperId)
       setExplanation({...explanation});
     }
     if (!explanation[realSearchResult[idx].paperId]) {

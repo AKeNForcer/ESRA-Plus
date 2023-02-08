@@ -5,7 +5,7 @@ import { FunctionComponent, useState } from "react";
 
 
 export const ResultPaper = (props: any) => {
-  const { result, query } = props;
+  const { result, query, explanation } = props;
   console.log(result);
   return <>
     <li
@@ -52,7 +52,35 @@ export const ResultPaper = (props: any) => {
           {result['title']}
         </h1>
       </Link>
-
+      <div className='flex flex-col show-logo:flex-row items-start justify-center text-left w-full px-1.5 text-sm pb-3 gap-3'>
+        <h5>Explanation:</h5>
+        <p className="font-extralight w-full">
+          {
+            (() => {
+              const res: [string] = result['abstract'].split(" ");
+              return <>
+                {
+                  explanation ?
+                  explanation.map((e: {"order": number, "sentence": string, "value": number}) => {
+                    return <>
+                      <mark className={`bg-opacity-${Math.round(e.value * 100)} bg-yellow-200 text-gray-600`}>{e["sentence"]}</mark>
+                      &nbsp;
+                    </>
+                  }) :
+                  <div className="flex w-full animate-pulse">
+                    <h3 className='flex flex-col items-start justify-start text-left w-full px-1.5 text-base font-semibold pt-1.5 gap-2'>
+                      <div className="h-3 w-full bg-gray-200 rounded-full"></div>
+                      <div className="h-3 w-10/12 bg-gray-200 rounded-full"></div>
+                      <div className="h-3 w-11/12 bg-gray-200 rounded-full"></div>
+                      <div className="h-3 w-1/3 bg-gray-200 rounded-full"></div>
+                    </h3>
+                  </div>
+                }
+              </>
+            })()
+          }
+        </p>
+      </div>
       <div className='flex flex-col show-logo:flex-row items-start justify-start text-left w-full px-1.5 text-sm pb-1 gap-3'>
         <h5>Abstract:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h5>
         <p className="font-extralight">

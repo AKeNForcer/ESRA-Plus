@@ -19,6 +19,7 @@ const PaperPage: NextPage = () => {
   const [showMinimal, setShowMinimal] = useState(false);
   const [showMinimalBar, setShowMinimalBar] = useState(false);
   const [relatedPapers, setRelatedPapers] = useState<Array<{[key: string]: any}>>([]);
+  const [explanation, setExplanation] = useState<[{order: number, sentence: string, value: number}] | null>(null);
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -28,6 +29,7 @@ const PaperPage: NextPage = () => {
   useEffect(() => {
     console.log(`paper or query changed: ${paperId}, ${query}`);
     setRelatedPapers([]);
+    setExplanation(null);
     if (paperId) {
       const PAPER_URL = new URL('paper', origin).toString();
       axios.get(PAPER_URL, { params: { query: query, paperId } })
@@ -55,6 +57,12 @@ const PaperPage: NextPage = () => {
             throw error;
           }
         });
+      if (query) {
+        const EXPLAIN_URL = new URL('explain', origin).toString();
+        axios.get(EXPLAIN_URL, { params: { query: query, paperId: paperId, wait: 45, gen: 1 } }).then(response => {
+          setExplanation(response.data.result);
+        });
+      }
     }
   }, [query, paperId]);
 
@@ -107,7 +115,7 @@ const PaperPage: NextPage = () => {
               <>
                 <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[950px] items-center gap-3 pt-5 show-logo:pt-0'>
                   <ul className='flex flex-col items-center justify-center w-full gap-3'>
-                    {(query !== undefined && paper !== undefined) ? <ResultPaper query={query} result={paper} /> : null}
+                    {(query !== undefined && paper !== undefined) ? <ResultPaper query={query} result={paper} explanation={explanation} /> : null}
                   </ul>
                 </div>
                 <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[300px] items-center gap-3'>
