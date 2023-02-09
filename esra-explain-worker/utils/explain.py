@@ -136,3 +136,192 @@ class ExplainService:
     def _softmax(self, x):
         e_x = np.exp(x - np.max(x))
         return e_x / e_x.sum(axis=0)
+    
+    def _gen_questions(self, documents, num_return_sequences=5):
+        t5_encoded_inputs = self.tokenizer_T5.batch_encode_plus(
+            documents, return_tensors='pt', padding=True)
+        generated_question_sequences = self.model_T5.generate(
+            input_ids=t5_encoded_inputs['input_ids'],
+            attention_mask=t5_encoded_inputs['attention_mask'],
+            max_length=64,
+            do_sample=True, 
+            top_p=0.95,
+            num_return_sequences=num_return_sequences
+        )
+        decoded_sequences = self.tokenizer_T5.batch_decode(
+            generated_question_sequences, skip_special_tokens=True)
+        return decoded_sequences
+    
+    def _calc_similiarity(self, query, sentences):
+        if type(query) != type([]):
+            query = [query]
+        sentence_combinations = [(q, s) for q in query for s in sentences]
+        similarity_scores = self.model_CE.predict(sentence_combinations)
+        return list(zip(similarity_scores, sentence_combinations))
+    
+    def _gen_question(self,
+                 query, 
+                 documents,
+                 num_return_sequences,
+                 similarity_threshold, 
+                 min_pass,
+                 template_questions,
+                 verbose):
+        questions = self._gen_questions(documents, num_return_sequences)
+        questions = sorted(self._calc_similiarity(query, questions), 
+                         key=lambda x: -x[0])
+        if verbose: print("questions:\n", questions)
+        
+        cut = 0
+        for score, question in questions:
+            if cut >= min_pass and score < similarity_threshold:
+                break
+            cut += 1
+        questions = [q[1][1] for q in questions[:cut]]
+        if verbose: print("cut at:", cut)
+            
+        questions_template_sim = self._calc_similiarity(
+            [f"{t}" for t in template_questions], questions)
+        if verbose: print("questions_template_sim:\n", questions_template_sim)
+            
+        final_questions = []
+        for i in range(0, len(questions_template_sim), len(questions)):
+            final_questions.append(
+                max(
+                    questions_template_sim[i:i+len(questions)],
+                    key=lambda x: x[0]
+                )[1][1]
+            )
+        if verbose: print("final_questions:\n", final_questions)
+        return final_questions
+    
+    def _generate_answer(self, question, documents):
+        conditioned_doc = "<P> " + " <P> ".join(documents)
+        query_and_docs = "question: {} context: {}".format(question, conditioned_doc)
+        
+        model_input = self.tokenizer_lfqa(query_and_docs, truncation=True, padding=True, return_tensors="pt")
+        generated_answers_encoded = self.model_lfqa.generate(
+            input_ids=model_input["input_ids"].to(self.device),
+            attention_mask=model_input["attention_mask"].to(self.device),
+            min_length=64,
+            max_length=256,
+            do_sample=False, 
+            early_stopping=False,
+            num_beams=8,
+            temperature=12,
+            top_k=None,
+            top_p=0.97,
+            eos_token_id=self.tokenizer_lfqa.eos_token_id,
+            no_repeat_ngram_size=3,
+            num_return_sequences=1)
+        
+        ans = self.tokenizer_lfqa.batch_decode(generated_answers_encoded, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+        if "I'm not sure" in ans[0] :
+            preprocess_text = ans[0].strip().replace("\n","")
+            t5_prepared_Text = "summarize: "+preprocess_text
+            tokenized_text = self.T5_arxiv_tokenizer.encode(t5_prepared_Text, return_tensors="pt", add_special_tokens=True).to(self.device)
+            summary_ids = self.T5_arxiv_model.generate(
+                tokenized_text,
+                num_beams=4,
+                no_repeat_ngram_size=2,
+                min_length=30,
+                max_length=100,
+                early_stopping=True)
+            ans = [self.T5_arxiv_tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=True) for g in summary_ids][0]
+            encoded = self.T5_arxiv_tokenizer.encode_plus(ans, add_special_tokens=True, return_tensors='pt')
+            input_ids = encoded['input_ids'].to(self.device)
+
+            # Generaing 20 sequences with maximum length set to 5
+            outputs = self.T5_arxiv_model.generate(
+                input_ids=input_ids, 
+                num_beams=30,
+                num_return_sequences=10,
+                max_length=30)
+            
+            try:
+                _0_index = ans.index('<extra_id_0>')
+                _result_prefix = ans[:_0_index]
+                _result_suffix = ans[_0_index+12:]  # 12 is the length of <extra_id_0>
+
+                results = [self._filter(o, _result_prefix, _result_suffix) for o in outputs]
+                ans = [results[0]]
+            except ValueError:
+                pass
+        
+        sentences = self.tokenizer_sentence.tokenize(ans[0])
+        for i in range(len(sentences)):
+            sen = sentences[i]
+            find = re.findall(pattern, sen)
+            if len(find) > 12 :
+                sentences[i] = ''
+        sentences = [f"(q: {question})", *sentences]
+        return ' '.join(sentences)
+
+    def overview(self, 
+                 query, 
+                 documents,
+                 num_return_sequences=5,
+                 similarity_threshold=2, 
+                 min_pass=5,
+                 template_questions=["What is this?", "What is it use for?"],
+                 verbose=False):
+        questions = self._gen_question(
+            query, 
+            documents,
+            num_return_sequences,
+            similarity_threshold, 
+            min_pass,
+            template_questions,
+            verbose
+        )
+        return [self._generate_answer(q, documents) for q in questions]
+    
+    def explain2(self, query, abstract, verbose=False):
+        sentences = sent_tokenize(abstract)
+        sim_kw = self._calc_similiarity('We show, propose, present, introduce', sentences)
+        if verbose: print("sim_kw", sim_kw)
+
+        sim_kw_i_max = np.argmax([s[0] for s in sim_kw])
+        sim_kw_max = sim_kw[sim_kw_i_max]
+        del sim_kw[sim_kw_i_max]
+        if verbose: print("\nsim_kw_max", sim_kw_max)
+        
+        sim_q = self._calc_similiarity(query, [s[1][1] for s in sim_kw])
+        if verbose: print("\nsim_q", sim_q)
+        sim_q_max = max(sim_q, key=lambda x: x[0])
+        if verbose: print("\nsim_q_max", sim_q_max)
+        
+        preprocess_text = (f"{sim_q_max[1][1]} {sim_kw_max[1][1]}").strip().replace("\n"," ").strip()
+        t5_prepared_Text = "summarize: " + preprocess_text
+        tokenized_text = self.T5_arxiv_tokenizer.encode(t5_prepared_Text, return_tensors="pt", add_special_tokens=True).to(self.device)
+        summary_ids = self.T5_arxiv_model.generate(
+            tokenized_text,
+            num_beams=4,
+            no_repeat_ngram_size=2,
+            min_length=30,
+            max_length=100,
+            early_stopping=True)
+        ans = [self.T5_arxiv_tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=True) for g in summary_ids]#[0]
+        
+        return ans
+        
+        encoded = self.T5_arxiv_tokenizer.encode_plus(ans, add_special_tokens=True, return_tensors='pt')
+        input_ids = encoded['input_ids'].to(self.device)
+
+        # Generaing 20 sequences with maximum length set to 5
+        outputs = self.T5_arxiv_model.generate(
+            input_ids=input_ids, 
+            num_beams=30,
+            num_return_sequences=10,
+            max_length=30)
+        
+        _0_index = ans.index('<extra_id_0>')
+        _result_prefix = ans[:_0_index]
+        _result_suffix = ans[_0_index+12:]  # 12 is the length of <extra_id_0>
+
+        results = [self._filter(o, _result_prefix, _result_suffix) for o in outputs]
+        ans = [results[0]]
+
+        return ans
+
+        # return self.T5_arxiv_tokenizer.batch_decode(outputs, skip_special_tokens=True, clean_up_tokenization_spaces=True)
