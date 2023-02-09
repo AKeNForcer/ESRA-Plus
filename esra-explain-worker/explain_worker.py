@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from utils.explain import ExplainService
 import os
 import torch
+import requests
 
 load_dotenv()
 DEVICE = os.environ['DEVICE'] if 'DEVICE' in os.environ else 'cuda'
@@ -28,6 +29,8 @@ ES_ARGS = dict(
     )
 )
 
+BACKEND_URL = os.environ['BACKEND_URL']
+
 HOST = os.environ['HOST'] if 'HOST' in os.environ else ''
 PORT = int(os.environ['PORT']) if 'PORT' in os.environ else 5000
 
@@ -36,6 +39,7 @@ main_es = Elasticsearch(**ES_ARGS)
 mongo_client = pymongo.MongoClient(os.getenv('MONGODB_URI'))
 db = mongo_client[f"esra_plus"].with_options(codec_options=CodecOptions(tz_aware=True,tzinfo=pytz.utc))
 explain_col = db["explanations"]
+overview_col = db["overviews"]
 
 if DEVICE == 'cuda':
     exps = ExplainService()
@@ -87,6 +91,20 @@ def gen_explain():
         "query": query,
         "paperId": paper_id,
         "explanation": explanation
+    })
+    return "success"
+
+@app.route("/overview", methods=['POST'])
+def gen_overview():
+    query = request.json["query"]
+    result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=5)).json()['result']
+    overview_list = exps.overview(query, [r['abstract'] for r in result], similarity_threshold=2, num_return_sequences=1, verbose=False)
+    # exps.explain()
+    overview_col.insert_one({
+        "created_date": datetime.utcnow(),
+        "expire_date": datetime.utcnow() + EXPIRE_DURATION,
+        "query": query,
+        "overview": ' '.join(overview_list)
     })
     return "success"
 

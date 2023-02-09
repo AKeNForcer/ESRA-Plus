@@ -82,6 +82,7 @@ services:
       MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
       MAIN_ELASTICSEARCH_USER: elastic
       MAIN_ELASTICSEARCH_PASS: esra_CP44
+      BACKEND_URL: http://backend:3001/
       MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
       EXPIRE_DURATION: 300000
       PORT: 5559
@@ -105,6 +106,7 @@ services:
       MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
       MAIN_ELASTICSEARCH_USER: elastic
       MAIN_ELASTICSEARCH_PASS: esra_CP44
+      BACKEND_URL: http://backend:3001/
       MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
       EXPIRE_DURATION: 300000
       PORT: 5559

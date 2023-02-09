@@ -40,8 +40,25 @@ export class ExplainService {
         );
     }
 
+    async getOverview(query: string): Promise<string | null> {
+        const overview = await this.overviewModel.findOne({query}, {_id: 0, overview: 1});
+        return overview ? overview.overview : null;
+    }
+
+    async generateOverview(query: string): Promise<void> {
+        if (await this.overviewModel.exists({query})) {
+            return
+        }
+        await firstValueFrom(
+            this.httpService.post(this.overviewUrl, [{query, rank: 10}])
+        );
+    }
+
     @Cron("*/10 * * * * *")
     async clean() {
-        await this.explanationModel.deleteMany({ expire_date: { $lte: new Date() } });
+        await Promise.all([
+            this.explanationModel.deleteMany({ expire_date: { $lte: new Date() } }),
+            this.overviewModel.deleteMany({ expire_date: { $lte: new Date() } })
+        ]);
     }
 }

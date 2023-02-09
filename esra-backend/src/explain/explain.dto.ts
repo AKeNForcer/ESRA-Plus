@@ -21,3 +21,19 @@ export class ExplainDTO {
   @IsIn(['0', '1'])
   gen: string | boolean;
 }
+
+
+export class OverviewDTO {
+  @IsString()
+  @IsNotEmpty()
+  @Length(1)
+  query: string;
+
+  @IsOptional()
+  wait: number | typeof NaN;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['0', '1'])
+  gen: string | boolean;
+}

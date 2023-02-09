@@ -62,15 +62,15 @@ exp_controller = ExplainController(WORKERS_URL, WORK_LIMIT)
 
 app = Flask(__name__)
 
-@app.route("/explain", methods=['POST'])
-def gen_explain():
+@app.route("/<task>", methods=['POST'])
+def gen_explain(task):
     payloads = request.json
     for payload in payloads:
         if "rank" not in payload:
             return "rank is required", 400
     for payload in payloads:
         print("submit:", payload)
-        exp_controller.submit_work(payload["rank"], "explain", payload)
+        exp_controller.submit_work(payload["rank"], task, payload)
     return "success"
 
 if __name__ == '__main__':
