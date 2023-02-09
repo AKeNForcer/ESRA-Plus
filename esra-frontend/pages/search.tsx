@@ -23,6 +23,7 @@ const SearchPage: NextPage = () => {
   const [getExplainIdle, setGetExplainIdle] = useState<boolean>(true);
   const [getExplainIdleProbe, setGetExplainIdleProbe] = useState<boolean>(true);
   const [found409, setFound409] = useState<boolean>(false);
+  const [overview, setOverview] = useState<string| null>(null);
   
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -126,10 +127,16 @@ const SearchPage: NextPage = () => {
     if (query){
       setRealSearchResult([]);
       setHasMore(false);
+      setOverview(null);
       const SEARCH_URL = new URL('search', origin).toString();
       axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT, sort: sortBy } }).then(async response => {
         setRealSearchResult(response.data.result);
         setHasMore(true);
+        console.log("get overview");
+        const OVERVIEW_URL = new URL('explain/overview', origin).toString();
+        axios.get(OVERVIEW_URL, { params: { query: query, wait: 45, gen: 1 } }).then(async response => {
+          setOverview(response.data.result);
+        });
       });
     }
   }, [query, sortBy]);
@@ -239,10 +246,26 @@ const SearchPage: NextPage = () => {
           <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[500px] items-center gap-3'>
             <div className='flex flex-col w-full justify-start text-start p-4 border-[1px]'>
               <h3>Overview</h3>
-              <p className='p-2 font-extralight text-sm'>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                This paper describes the design and development of low cost USB Data Acquisition System (DAS) for the measurement of physical parameters. Physical parameters such as temperature, humidity, light intensity etc., which are generally slowly varying signals are sensed by respective sensors or integrated sensors and converted into voltages. The DAS is designed using PIC18F4550 microcontroller, communicating with Personal Computer (PC) through USB (Universal Serial Bus). The designed DAS has been tested with the application program developed in Visual Basic, which allows online monitoring in graphical as well as numerical display.
-              </p>
+              {
+                overview ? <p className='p-2 font-extralight text-sm'>
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  {overview}
+                </p> : 
+                <div className="flex w-full animate-pulse">
+                  <h3 className='flex flex-col items-start justify-start text-left w-full px-1.5 text-base font-semibold pt-1.5 gap-2'>
+                    <div className="h-3 w-full bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-10/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-11/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-full bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-10/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-9/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-11/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-10/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-11/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-1/3 bg-gray-200 rounded-full"></div>
+                  </h3>
+                </div>
+              }
             </div>
             <div className='flex w-full h-24 justify-start p-3 border-[1px]'>
               Fact list
