@@ -92,7 +92,15 @@ class ExplainService:
         
         curr = datetime.now(); print("generated_answers_encoded = self.model_lfqa.generate(", curr - before); before = curr
         
-        ans = self.tokenizer_lfqa.batch_decode(generated_answers_encoded, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+        ans = self.tokenizer_lfqa.batch_decode(generated_answers_encoded, skip_special_tokens=True, clean_up_tokenization_spaces=True)        
+        print("ans", ans)
+        if "For example," not in abstract:
+            try:
+                idx = ans[0].index("For example,")
+                ans[0] = ans[0][:idx]
+            except ValueError:
+                pass
+        
         sentences = sent_tokenize(ans[0])
         sentence_combinations = [[abstract, sentence] for sentence in sentences]
         similarity_scores = self.model_CE.predict(sentence_combinations)
