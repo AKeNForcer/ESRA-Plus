@@ -5,6 +5,7 @@ from nltk.tokenize import sent_tokenize
 import nltk.data
 import numpy as np
 import re
+from datetime import datetime
 
 pattern = r'[0-9]'
 
@@ -34,50 +35,70 @@ class ExplainService:
             return _result_prefix + _txt + _result_suffix
 
     def explain(self, query, abstract, join=False):
+        before = datetime.now()
+
         sentences = sent_tokenize(abstract)
         sentence_combinations = [[query, sentence] for sentence in sentences]
         similarity_scores = self.model_CE.predict(sentence_combinations)
+
+        curr = datetime.now(); print("similarity_scores = self.model_CE.predict(sentence_combinations)", curr - before); before = curr
         
-        qualified_sentences = []
-        for i in range(len(sentences)):
-            if similarity_scores[i] > 0:
-                qualified_sentences.append(sentences[i])
+#         qualified_sentences = []
+#         for i in range(len(sentences)):
+#             if similarity_scores[i] > 0:
+#                 qualified_sentences.append(sentences[i])
         
         input_ids = self.tokenizer_T5.encode(abstract, return_tensors = 'pt')
-        outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.95, num_return_sequences = 5)
+        outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.90, num_return_sequences = 5)
+
+        curr = datetime.now(); print("outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.90, num_return_sequences = 5)", curr - before); before = curr
 
         questions = []
         for i in range(len(outputs)):
             questions.append([query, self.tokenizer_T5.decode(outputs[i], skip_special_tokens = True)])
-        for sentence in qualified_sentences:
-            input_ids = self.tokenizer_T5.encode(sentence, return_tensors = 'pt')
-            outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.90, num_return_sequences = 3)
-            for i in range(len(outputs)):
-                questions.append([query, self.tokenizer_T5.decode(outputs[i], skip_special_tokens = True)])
+        # for sentence in qualified_sentences:
+        #     input_ids = self.tokenizer_T5.encode(sentence, return_tensors = 'pt')
+        #     outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.90, num_return_sequences = 3)
+        #     for i in range(len(outputs)):
+        #         questions.append([query, self.tokenizer_T5.decode(outputs[i], skip_special_tokens = True)])
         
+        curr = datetime.now(); print("for sentence in qualified_sentences:", curr - before); before = curr
+
         similarity_scores_questions = self.model_CE.predict(questions)
         best_gen_question = questions[np.argmax(similarity_scores_questions)]
+        second_gen_question = sorted([q for s,q in zip(similarity_scores_questions, questions)])[1]
         documents = [abstract]
         conditioned_doc = "<P> " + " <P> ".join([d for d in documents])
         query_and_docs = "question: {} context: {}".format(best_gen_question[1], conditioned_doc)
+
+        curr = datetime.now(); print("similarity_scores_questions = self.model_CE.predict(questions)", curr - before); before = curr
 
         model_input = self.tokenizer_lfqa(query_and_docs, truncation=True, padding=True, return_tensors="pt")
         generated_answers_encoded = self.model_lfqa.generate(
             input_ids=model_input["input_ids"].to(self.device),
             attention_mask=model_input["attention_mask"].to(self.device),
             min_length=64,
-            max_length=256,
+            max_length=128,
             do_sample=False, 
             early_stopping=False,
-            num_beams=8,
-            temperature=12,
+            num_beams=20,
+            temperature=1,
             top_k=None,
             top_p=0.97,
             eos_token_id=self.tokenizer_lfqa.eos_token_id,
-            no_repeat_ngram_size=3,
+            no_repeat_ngram_size=4,
             num_return_sequences=1)
         
+        
+        curr = datetime.now(); print("generated_answers_encoded = self.model_lfqa.generate(", curr - before); before = curr
+        
         ans = self.tokenizer_lfqa.batch_decode(generated_answers_encoded, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+        sentences = sent_tokenize(ans[0])
+        sentence_combinations = [[abstract, sentence] for sentence in sentences]
+        similarity_scores = self.model_CE.predict(sentence_combinations)
+        if similarity_scores.mean()<0:
+            ans = self.explain2(query, abstract)
+            
         if "I'm not sure" in ans[0] :
             preprocess_text = ans[0].strip().replace("\n","")
             t5_prepared_Text = "summarize: "+preprocess_text
@@ -117,11 +138,13 @@ class ExplainService:
             if len(find) > 12 :
                 sentences[i] = ''
 
-        sentences = [best_gen_question[1], *sentences]
+        sentences = [*sentences]
         
+        curr = datetime.now(); print('''if "I'm not sure" in ans[0] :''', curr - before); before = curr
+
         if join:
             return ' '.join(sentences)
-        return sentences
+        return ans
 
     def highlight(self, query, sentences, tokenized=True):
         if not tokenized:
@@ -204,7 +227,7 @@ class ExplainService:
             input_ids=model_input["input_ids"].to(self.device),
             attention_mask=model_input["attention_mask"].to(self.device),
             min_length=64,
-            max_length=256,
+            max_length=128,
             do_sample=False, 
             early_stopping=False,
             num_beams=8,
@@ -254,7 +277,7 @@ class ExplainService:
             find = re.findall(pattern, sen)
             if len(find) > 12 :
                 sentences[i] = ''
-        sentences = [f"(q: {question})", *sentences]
+        sentences = [*sentences]
         return ' '.join(sentences)
 
     def overview(self, 
@@ -263,7 +286,7 @@ class ExplainService:
                  num_return_sequences=5,
                  similarity_threshold=2, 
                  min_pass=5,
-                 template_questions=["What is this?", "What is it use for?"],
+                 template_questions=["What is this?"],
                  verbose=False):
         questions = self._gen_question(
             query, 
@@ -292,18 +315,18 @@ class ExplainService:
         if verbose: print("\nsim_q_max", sim_q_max)
         
         preprocess_text = (f"{sim_q_max[1][1]} {sim_kw_max[1][1]}").strip().replace("\n"," ").strip()
-        t5_prepared_Text = "summarize: " + preprocess_text
-        tokenized_text = self.T5_arxiv_tokenizer.encode(t5_prepared_Text, return_tensors="pt", add_special_tokens=True).to(self.device)
-        summary_ids = self.T5_arxiv_model.generate(
-            tokenized_text,
-            num_beams=4,
-            no_repeat_ngram_size=2,
-            min_length=30,
-            max_length=100,
-            early_stopping=True)
-        ans = [self.T5_arxiv_tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=True) for g in summary_ids]#[0]
+#         t5_prepared_Text = "summarize: " + preprocess_text
+#         tokenized_text = self.T5_arxiv_tokenizer.encode(t5_prepared_Text, return_tensors="pt", add_special_tokens=True).to(self.device)
+#         summary_ids = self.T5_arxiv_model.generate(
+#             tokenized_text,
+#             num_beams=4,
+#             no_repeat_ngram_size=2,
+#             min_length=30,
+#             max_length=100,
+#             early_stopping=True)
+#         ans = [self.T5_arxiv_tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=True) for g in summary_ids]#[0]
         
-        return ans
+        return [preprocess_text]
         
         encoded = self.T5_arxiv_tokenizer.encode_plus(ans, add_special_tokens=True, return_tensors='pt')
         input_ids = encoded['input_ids'].to(self.device)
