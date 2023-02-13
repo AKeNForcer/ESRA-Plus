@@ -12,7 +12,7 @@ export class SearchResult {
   @Prop({ type: Date })
   expire_date: Date;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, index: true })
   query: string;
 
   @Prop({ type: String, required: true })

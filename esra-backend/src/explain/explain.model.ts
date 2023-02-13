@@ -9,7 +9,7 @@ export class Explanation {
   @Prop({ type: Date })
   expire_date: Date;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, index: true })
   query: string;
 
   @Prop({ type: String, required: true })
@@ -29,7 +29,7 @@ export class Overview {
   @Prop({ type: Date })
   expire_date: Date;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, index: true })
   query: string;
 
   @Prop({ type: String, required: true })
@@ -44,7 +44,7 @@ export class FactList {
   @Prop({ type: String, required: true })
   _id: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, index: true })
   paper_id: string;
 
   @Prop({ type: String, required: true })
@@ -53,8 +53,8 @@ export class FactList {
   @Prop({ type: String, required: true })
   type: string;
 
-  @Prop({ type: [[String, String]], required: true })
-  re: [[string, string]];
+  @Prop({ type: [[String, String, String]], required: true })
+  re: [[string, string, string]];
 }
 export type FactListDocument = FactList & Document;
 export const FactListSchema = SchemaFactory.createForClass(FactList);
@@ -67,7 +67,7 @@ export class Question {
   @Prop({ type: Date })
   expire_date: Date;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, index: true })
   query: string;
 
   @Prop({ type: [String], required: true })
