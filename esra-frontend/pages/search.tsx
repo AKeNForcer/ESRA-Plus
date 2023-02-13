@@ -244,6 +244,9 @@ const SearchPage: NextPage = () => {
             }
           </div>
           <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[500px] items-center gap-3'>
+            <div className='flex w-full h-24 justify-start p-3 border-[1px]'>
+              Fact list
+            </div>
             <div className='flex flex-col w-full justify-start text-start p-4 border-[1px]'>
               <h3>Overview</h3>
               {
@@ -266,9 +269,6 @@ const SearchPage: NextPage = () => {
                   </h3>
                 </div>
               }
-            </div>
-            <div className='flex w-full h-24 justify-start p-3 border-[1px]'>
-              Fact list
             </div>
           </div>
         </main>
