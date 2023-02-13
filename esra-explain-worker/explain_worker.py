@@ -40,6 +40,7 @@ mongo_client = pymongo.MongoClient(os.getenv('MONGODB_URI'))
 db = mongo_client[f"esra_plus"].with_options(codec_options=CodecOptions(tz_aware=True,tzinfo=pytz.utc))
 explain_col = db["explanations"]
 overview_col = db["overviews"]
+question_col = db["questions"]
 
 if DEVICE == 'cuda':
     exps = ExplainService()
@@ -100,12 +101,24 @@ def gen_overview():
     query = request.json["query"]
     result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=5)).json()['result']
     overview_list = exps.overview(query, [r['abstract'] for r in result], similarity_threshold=2, num_return_sequences=1, verbose=False)
-    # exps.explain()
     overview_col.insert_one({
         "created_date": datetime.utcnow(),
         "expire_date": datetime.utcnow() + EXPIRE_DURATION,
         "query": query,
         "overview": ' '.join(overview_list)
+    })
+    return "success"
+
+@app.route("/question", methods=['POST'])
+def gen_question():
+    query = request.json["query"]
+    result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=5)).json()['result']
+    questions = exps.gen_question(query, [r['abstract'] for r in result], num_return_sequences=2, similarity_threshold=2, min_pass=5)
+    question_col.insert_one({
+        "created_date": datetime.utcnow(),
+        "expire_date": datetime.utcnow() + EXPIRE_DURATION,
+        "query": query,
+        "questions": questions
     })
     return "success"
 

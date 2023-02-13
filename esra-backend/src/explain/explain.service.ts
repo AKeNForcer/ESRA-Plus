@@ -6,22 +6,25 @@ import { Cron } from '@nestjs/schedule';
 import { Model, Types } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
 import { SearchService } from 'src/search/search.service';
-import { Explanation, ExplanationDocument, FactList, FactListDocument, Overview, OverviewDocument } from './explain.model';
+import { Explanation, ExplanationDocument, FactList, FactListDocument, Overview, OverviewDocument, Question, QuestionDocument } from './explain.model';
 
 @Injectable()
 export class ExplainService {
     explainUrl: string;
     overviewUrl: string;
     factListUrl: string;
+    questionUrl: string;
     constructor (
         private readonly configService: ConfigService,
         private readonly httpService: HttpService,
         private readonly searchService: SearchService,
         @InjectModel(Explanation.name) private explanationModel: Model<ExplanationDocument>,
         @InjectModel(Overview.name) private overviewModel: Model<OverviewDocument>,
+        @InjectModel(Question.name) private questionModel: Model<QuestionDocument>,
         @InjectModel(FactList.name) private factListModel: Model<FactListDocument>) {
             this.explainUrl = new URL("explain", this.configService.get<string>('EXPLAIN_URL')).toString();
             this.overviewUrl = new URL("overview", this.explainUrl).toString();
+            this.questionUrl = new URL("question", this.explainUrl).toString();
             this.factListUrl = new URL("factlist", this.explainUrl).toString();
         }
 
@@ -50,7 +53,21 @@ export class ExplainService {
             return
         }
         await firstValueFrom(
-            this.httpService.post(this.overviewUrl, [{query, rank: 10}])
+            this.httpService.post(this.overviewUrl, [{query, rank: 0}])
+        );
+    }
+
+    async getQuestion(query: string): Promise<[string] | null> {
+        const question = await this.questionModel.findOne({query}, {_id: 0, questions: 1});
+        return question ? question.questions : null;
+    }
+
+    async generateQuestion(query: string): Promise<void> {
+        if (await this.questionModel.exists({query})) {
+            return
+        }
+        await firstValueFrom(
+            this.httpService.post(this.questionUrl, [{query, rank: 0}])
         );
     }
 
@@ -58,7 +75,8 @@ export class ExplainService {
     async clean() {
         await Promise.all([
             this.explanationModel.deleteMany({ expire_date: { $lte: new Date() } }),
-            this.overviewModel.deleteMany({ expire_date: { $lte: new Date() } })
+            this.overviewModel.deleteMany({ expire_date: { $lte: new Date() } }),
+            this.questionModel.deleteMany({ expire_date: { $lte: new Date() } })
         ]);
     }
 }

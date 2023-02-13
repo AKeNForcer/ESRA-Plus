@@ -190,15 +190,15 @@ class ExplainService:
         similarity_scores = self.model_CE.predict(sentence_combinations)
         return list(zip(similarity_scores, sentence_combinations))
     
-    def _gen_question(self,
+    def gen_question(self,
                  query, 
                  documents,
                  num_return_sequences,
-                 similarity_threshold, 
+                 similarity_threshold,
                  min_pass,
-                 template_questions,
-                 verbose):
+                 verbose=False):
         questions = self._gen_questions(documents, num_return_sequences)
+        questions = list(set(questions))
         questions = sorted(self._calc_similiarity(query, questions), 
                          key=lambda x: -x[0])
         if verbose: print("questions:\n", questions)
@@ -210,7 +210,12 @@ class ExplainService:
             cut += 1
         questions = [q[1][1] for q in questions[:cut]]
         if verbose: print("cut at:", cut)
-            
+        return questions
+
+    def _filter_overview_question(self,
+                questions,
+                template_questions,
+                verbose):
         questions_template_sim = self._calc_similiarity(
             [f"{t}" for t in template_questions], questions)
         if verbose: print("questions_template_sim:\n", questions_template_sim)
@@ -296,16 +301,13 @@ class ExplainService:
                  min_pass=5,
                  template_questions=["What is this?"],
                  verbose=False):
-        questions = self._gen_question(
-            query, 
-            documents,
-            num_return_sequences,
-            similarity_threshold, 
-            min_pass,
+        questions = self.gen_question(query, documents, num_return_sequences, similarity_threshold, min_pass, verbose)
+        filtered_questions = self._filter_overview_question(
+            questions,
             template_questions,
             verbose
         )
-        return [self._generate_answer(q, documents) for q in questions]
+        return [self._generate_answer(q, documents) for q in filtered_questions]
     
     def explain2(self, query, abstract, verbose=False):
         sentences = sent_tokenize(abstract)

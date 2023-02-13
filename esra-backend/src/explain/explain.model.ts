@@ -58,3 +58,20 @@ export class FactList {
 }
 export type FactListDocument = FactList & Document;
 export const FactListSchema = SchemaFactory.createForClass(FactList);
+
+@Schema()
+export class Question {
+  @Prop({ default: new Date() })
+  created_date: Date;
+
+  @Prop({ type: Date })
+  expire_date: Date;
+
+  @Prop({ type: String, required: true })
+  query: string;
+
+  @Prop({ type: [String], required: true })
+  questions: [string];
+}
+export type QuestionDocument = Question & Document;
+export const QuestionSchema = SchemaFactory.createForClass(Question);
