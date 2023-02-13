@@ -9,6 +9,7 @@ import { SearchComponent } from '../components/search/search-component'
 import InfiniteScroll from "react-infinite-scroll-component";
 import { HeadLogo } from '../components/head-logo'
 import { ExpandMore } from '@material-ui/icons'
+import Link from 'next/link'
 const Mutex = require("async-mutex").Mutex;
 
 const SearchPage: NextPage = () => {
@@ -24,6 +25,7 @@ const SearchPage: NextPage = () => {
   const [getExplainIdleProbe, setGetExplainIdleProbe] = useState<boolean>(true);
   const [found409, setFound409] = useState<boolean>(false);
   const [overview, setOverview] = useState<string| null>(null);
+  const [question, setQuestion] = useState<[string]| null>(null);
   
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -43,7 +45,7 @@ const SearchPage: NextPage = () => {
     }
     const EXPLAIN_URL = new URL('explain', origin).toString();
     const setExplain = (response: AxiosResponse<any, any>, i: number) => {
-      explanation[`${realSearchResult[i].paperId}`] = [{order: 0, sentence: `${i}: `, value: 0}, ...response.data.result];
+      explanation[`${realSearchResult[i].paperId}`] = [...response.data.result];
       console.log(i, "set explanation", realSearchResult[i].paperId)
       setExplanation({...explanation});
     }
@@ -128,6 +130,7 @@ const SearchPage: NextPage = () => {
       setRealSearchResult([]);
       setHasMore(false);
       setOverview(null);
+      setQuestion(null);
       const SEARCH_URL = new URL('search', origin).toString();
       axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT, sort: sortBy } }).then(async response => {
         setRealSearchResult(response.data.result);
@@ -136,6 +139,12 @@ const SearchPage: NextPage = () => {
         const OVERVIEW_URL = new URL('explain/overview', origin).toString();
         axios.get(OVERVIEW_URL, { params: { query: query, wait: 45, gen: 1 } }).then(async response => {
           setOverview(response.data.result);
+        });
+        console.log("get question");
+        const QUESTION_URL = new URL('explain/question', origin).toString();
+        axios.get(QUESTION_URL, { params: { query: query, wait: 45, gen: 1 } }).then(async response => {
+          setQuestion(response.data.result);
+          console.log('question', response.data.result);
         });
       });
     }
@@ -268,6 +277,20 @@ const SearchPage: NextPage = () => {
                     <div className="h-3 w-1/3 bg-gray-200 rounded-full"></div>
                   </h3>
                 </div>
+              }
+            </div>
+            <div className='flex flex-col w-full justify-start text-start p-4 border-[1px]'>
+              <h3>Related queries</h3>
+              {
+                question ? 
+                <ul className='flex flex-wrap justify-start w-auto gap-1 mt-3'>
+                  {question.map(
+                    (e) => <Link href={`/search?query=${e}`} key={e}>
+                      <div className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs hover:underline'>{e}</div>
+                    </Link>
+                  )} 
+                </ul> : null
+
               }
             </div>
           </div>
