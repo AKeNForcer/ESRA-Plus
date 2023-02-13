@@ -81,7 +81,7 @@ const PaperPage: NextPage = () => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-first">
       <Head>
-        <title>{paperId}</title>
+        <title>{paperId} - ESRA+ Paper</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 

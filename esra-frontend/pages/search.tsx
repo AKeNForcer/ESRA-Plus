@@ -184,7 +184,7 @@ const SearchPage: NextPage = () => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-first">
       <Head>
-        <title>{getExplainIdleProbe} ESRA+ search result</title>
+        <title>{query} - ESRA+ search</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
