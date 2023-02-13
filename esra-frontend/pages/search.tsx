@@ -282,14 +282,23 @@ const SearchPage: NextPage = () => {
             <div className='flex flex-col w-full justify-start text-start p-4 border-[1px]'>
               <h3>Related queries</h3>
               {
-                question ? 
                 <ul className='flex flex-wrap justify-start w-auto gap-1 mt-3'>
-                  {question.map(
-                    (e) => <Link href={`/search?query=${e}`} key={e}>
-                      <div className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs hover:underline'>{e}</div>
-                    </Link>
-                  )} 
-                </ul> : null
+                  {
+                    question ? 
+                    question.map(
+                      (e) => <Link href={`/search?query=${e}`} key={e}>
+                        <div className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs hover:underline'>{e}</div>
+                      </Link>
+                    ) :
+                    <>
+                      <div className="h-5 w-[80px] bg-gray-100 rounded-full"></div>
+                      <div className="h-5 w-[67px] bg-gray-100 rounded-full"></div>
+                      <div className="h-5 w-[85px] bg-gray-100 rounded-full"></div>
+                      <div className="h-5 w-[75px] bg-gray-100 rounded-full"></div>
+                      <div className="h-5 w-[64px] bg-gray-100 rounded-full"></div>
+                    </>
+                  }
+                </ul>
 
               }
             </div>
