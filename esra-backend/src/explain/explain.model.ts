@@ -41,17 +41,20 @@ export const OverviewSchema = SchemaFactory.createForClass(Overview);
 
 @Schema()
 export class FactList {
-  @Prop({ default: new Date() })
-  created_date: Date;
-
-  @Prop({ type: Date })
-  expire_date: Date;
+  @Prop({ type: String, required: true })
+  _id: string;
 
   @Prop({ type: String, required: true })
-  query: string;
+  paper_id: string;
 
-  @Prop({ type: Object, required: true })
-  factList: { [key: string]: Array<string> };
+  @Prop({ type: String, required: true })
+  entity: string;
+
+  @Prop({ type: String, required: true })
+  type: string;
+
+  @Prop({ type: [[String, String]], required: true })
+  re: [[string, string]];
 }
 export type FactListDocument = FactList & Document;
 export const FactListSchema = SchemaFactory.createForClass(FactList);
