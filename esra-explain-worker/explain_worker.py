@@ -80,9 +80,10 @@ def gen_explain():
 
     explain_paragraph = exps.explain(
         query,
-        f"( id: {paper['id']} | authors: {paper['authors']} | title: {paper['title']}) {paper['abstract']}"
+        paper['abstract'] #f"( id: {paper['id']} | authors: {paper['authors']} | title: {paper['title']}) {paper['abstract']}"
     )
-    explanation = exps.highlight(query, explain_paragraph)
+    # explanation = exps.highlight(query, explain_paragraph)
+    explanation = [dict(order=i+1, sentence=sen, value=0) for i, sen in enumerate(explain_paragraph)]
 
     # exps.explain()
     explain_col.insert_one({
