@@ -32,7 +32,7 @@ export class SearchService {
         this.searchResultExpireDuration = parseInt(this.configService.get<string>('QUERY_EXPIRE_DURATION'));
     }
 
-    async search(query: string, no_cache: boolean, limit: number, skip: number, sortExp: { [key: string]: any } = { rank: 1 }): Promise<object> {
+    async search(query: string, no_cache: boolean, limit: number, skip: number, sortExp: { [key: string]: any } = { rank: 1 }): Promise<SearchResult[]> {
         const resCount = await this.searchResultModel.count({ query, expire_date: { $gt: new Date() } });
         if(no_cache || resCount < this.searchEngineResultLimit) {
             const inProg = {inProg: false};

@@ -71,6 +71,68 @@ export class ExplainService {
         );
     }
 
+    async getFactlist(paper_id_list, limit=3): Promise<{ entity: string; type: string; re: [string, string, string][] | string[]; }[]> {
+        const pre_factlists = await this.fetchFactlist(paper_id_list, limit);
+        return pre_factlists.map((ner) => {
+            ner.re = ner.re.map((re) => {
+                if (re[2] === 'FEATURE-OF') {
+                    return `is a feature of ${re[1]}`
+                } else if (re[2] === 'PART-OF') {
+                    return `is a part of ${re[1]}`
+                } else if (re[2] === 'EVALUATE-FOR') {
+                    return `evaluate for ${re[1]}`
+                } else if (re[2] === 'CONJUNCTION') {
+                    return `is a conjunction of ${re[1]}`
+                } else if (re[2] === 'USED-FOR') {
+                    return `is used for ${re[1]}`
+                } else if (re[2] === 'HYPONYM-OF') {
+                    return `is a hyponym of ${re[1]}`
+                } else {
+                    return `compare to ${re[1]}`
+                }
+            });
+            return ner;
+        });
+    }
+
+    async fetchFactlist(paper_id_list, limit=3): Promise<{ entity: string; type: string; re: [string, string, string][] | string[]; }[]> {
+        return await this.factListModel.aggregate([
+            {'$match': {'paper_id': {'$in': paper_id_list}}},
+            {'$project': {_id: 1, entity: 1, type: 1, re: 1}},
+            { '$group': {
+                '_id': ['$entity', '$type'],
+                'entity': { '$first': '$entity' },
+                'type': { '$first': '$type' },
+                'cnt': { '$sum': 1 },
+                're': { '$push': '$re' }
+            } },
+            { '$sort': {
+                'cnt': -1
+            } },
+            { '$group': {
+                '_id': '$entity',
+                'type': { '$first': '$type' },
+                're': { '$push': '$re' }
+            } },
+            { '$unwind': '$re' },
+            { '$unwind': '$re' },
+            { '$unwind': '$re' },
+            { '$group': {
+                '_id': '$_id',
+                'type': { '$first': '$type' },
+                're': { '$addToSet': '$re' }
+            } },
+            { '$project': {
+                '_id': 0,
+                'entity': '$_id',
+                'type': 1,
+                're': 1
+            } },
+            { '$sort': { 'len': -1 } },
+            { '$limit': limit }
+        ])
+    }
+
     @Cron("*/10 * * * * *")
     async clean() {
         await Promise.all([

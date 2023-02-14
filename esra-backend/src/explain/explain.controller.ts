@@ -1,13 +1,15 @@
 import { Controller, Get, HttpException, HttpStatus, Query } from '@nestjs/common';
 import { PaperService } from 'src/paper/paper.service';
+import { SearchService } from 'src/search/search.service';
 import { responseJson } from 'src/share/util/response.util';
-import { ExplainDTO, OverviewDTO } from './explain.dto';
+import { ExplainDTO, FactlistDTO, OverviewDTO } from './explain.dto';
 import { ExplainService } from './explain.service';
 
 @Controller('explain')
 export class ExplainController {
     constructor(
         private readonly explainService: ExplainService,
+        private readonly searchService: SearchService,
         private readonly paperService: PaperService) {}
 
     @Get()
@@ -90,6 +92,21 @@ export class ExplainController {
         if (!result) {
             throw new HttpException(responseJson("processing", null, null, false), HttpStatus.CONFLICT);
         }
+        return responseJson("success", result);
+    }
+
+    @Get("/factlist")
+    async factlist(@Query() queries: FactlistDTO): Promise<object> {
+        const {query, limit} = queries;
+        if (limit) {
+            try {
+                parseInt(limit);
+            } catch (e) {
+                throw new HttpException(responseJson("limit must be integer", null, null, false), HttpStatus.BAD_REQUEST);
+            }
+        }
+        const searchResult = await this.searchService.search(query, false, 5, 0);
+        const result = await this.explainService.getFactlist(searchResult.map((e) => e.paperId), limit ? parseInt(limit): 3);
         return responseJson("success", result);
     }
 }

@@ -37,3 +37,15 @@ export class OverviewDTO {
   @IsIn(['0', '1'])
   gen: string | boolean;
 }
+
+export class FactlistDTO {
+  @IsString()
+  @IsNotEmpty()
+  @Length(1)
+  query: string;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  limit: string;
+}
