@@ -26,6 +26,7 @@ const SearchPage: NextPage = () => {
   const [found409, setFound409] = useState<boolean>(false);
   const [overview, setOverview] = useState<[{overview: string, question: string}]| null>(null);
   const [question, setQuestion] = useState<[string]| null>(null);
+  const [factlist, setFactlist] = useState<[{type: string, entity: string, re: [string]}]| null>(null);
   
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -131,6 +132,7 @@ const SearchPage: NextPage = () => {
       setHasMore(false);
       setOverview(null);
       setQuestion(null);
+      setFactlist(null);
       const SEARCH_URL = new URL('search', origin).toString();
       axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT, sort: sortBy } }).then(async response => {
         setRealSearchResult(response.data.result);
@@ -145,6 +147,12 @@ const SearchPage: NextPage = () => {
         axios.get(QUESTION_URL, { params: { query: query, wait: 45, gen: 1 } }).then(async response => {
           setQuestion(response.data.result);
           console.log('question', response.data.result);
+        });
+        console.log("get factlist");
+        const FACTLIST_URL = new URL('explain/factlist', origin).toString();
+        axios.get(FACTLIST_URL, { params: { query: query } }).then(async response => {
+          setFactlist(response.data.result);
+          console.log('factlist', response.data.result);
         });
       });
     }
@@ -253,8 +261,26 @@ const SearchPage: NextPage = () => {
             }
           </div>
           <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[500px] items-center gap-3'>
-            <div className='flex w-full h-24 justify-start p-3 border-[1px]'>
-              Fact list
+            <div className='flex flex-col w-full items-start text-start justify-start p-4 border-[1px]'>
+              <h3 className='w-full pb-3'>Fact list</h3>
+              {
+                factlist ?
+                <div className='flex flex-col w-full justify-start ml-3 gap-2 pr-3'>
+                  {factlist.map((e) => <div className='flex flex-col justify-start items-start text-start border-[1px] rounded-lg pb-3'>
+                    <div className='flex flex-wrap w-full p-2'>
+                      <div className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs'>{e.type}</div>
+                      &nbsp;
+                      <mark className='bg-transparent text-cyan-800 font-normal'>{e.entity}</mark>
+                    </div>
+                    {
+                      e.re.map((re) => <div className='text-start ml-10 font-extralight text-sm text-gray-600 mt-1'>
+                        &#x2022; {re}
+                      </div>)
+                    }
+                  </div>
+                  )}
+                </div> : null
+              }
             </div>
             <div className='flex flex-col w-full justify-start text-start p-4 border-[1px]'>
               <h3>Overview</h3>
