@@ -109,6 +109,8 @@ log_params "zerotier-cli info:" "$(zerotier-cli info)"
 
 zerotier-cli join $ZEROTIER_NETWORK_ID
 
+service nginx restart
+
 log "Sleeping infinitely"
 while true
 do
