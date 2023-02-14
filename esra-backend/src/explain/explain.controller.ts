@@ -55,7 +55,7 @@ export class ExplainController {
         if (gen) {
             this.explainService.generateOverview(query);
         }
-        let result: string | null = null;
+        let result: [{question: string, overview: string}] | null = null;
         for (; !result && wait > 0; wait-=0.1) {
             result = await this.explainService.getOverview(query);
             if (result) break;

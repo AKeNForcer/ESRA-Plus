@@ -43,7 +43,7 @@ export class ExplainService {
         );
     }
 
-    async getOverview(query: string): Promise<string | null> {
+    async getOverview(query: string): Promise<[{question: string, overview: string}] | null> {
         const overview = await this.overviewModel.findOne({query}, {_id: 0, overview: 1});
         return overview ? overview.overview : null;
     }

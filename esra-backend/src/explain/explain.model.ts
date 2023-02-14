@@ -32,8 +32,8 @@ export class Overview {
   @Prop({ type: String, required: true, index: true })
   query: string;
 
-  @Prop({ type: String, required: true })
-  overview: string;
+  @Prop({ type: [{question: String, overview: String}], required: true })
+  overview: [{question: string, overview: string}];
 }
 export type OverviewDocument = Overview & Document;
 export const OverviewSchema = SchemaFactory.createForClass(Overview);

@@ -130,6 +130,9 @@ services:
     networks:
       - esra
       - esra-db-es
+    links:
+      - explain-worker-0
+      - explain-worker-1
 
   backend:
     image: esra-backend

@@ -43,9 +43,9 @@ overview_col = db["overviews"]
 question_col = db["questions"]
 
 if DEVICE == 'cuda':
-    exps = ExplainService()
+    exps = ExplainService(db)
 else:
-    exps = ExplainService(DEVICE)
+    exps = ExplainService(db, DEVICE)
 
 def get_paper_abstract(paper_id):
     es_res = main_es.search(
@@ -96,16 +96,29 @@ def gen_explain():
     })
     return "success"
 
+# @app.route("/overview", methods=['POST'])
+# def gen_overview():
+#     query = request.json["query"]
+#     result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=5)).json()['result']
+#     overview_list = exps.overview(query, [r['abstract'] for r in result], similarity_threshold=2, num_return_sequences=1, verbose=False)
+#     overview_col.insert_one({
+#         "created_date": datetime.utcnow(),
+#         "expire_date": datetime.utcnow() + EXPIRE_DURATION,
+#         "query": query,
+#         "overview": ' '.join(overview_list)
+#     })
+#     return "success"
+
 @app.route("/overview", methods=['POST'])
 def gen_overview():
     query = request.json["query"]
     result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=5)).json()['result']
-    overview_list = exps.overview(query, [r['abstract'] for r in result], similarity_threshold=2, num_return_sequences=1, verbose=False)
+    overview_list = exps.overview_ner(query, result, verbose=False)
     overview_col.insert_one({
         "created_date": datetime.utcnow(),
         "expire_date": datetime.utcnow() + EXPIRE_DURATION,
         "query": query,
-        "overview": ' '.join(overview_list)
+        "overview": [dict(question=o[0], overview=o[1]) for o in overview_list]
     })
     return "success"
 
