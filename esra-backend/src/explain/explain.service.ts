@@ -126,9 +126,15 @@ export class ExplainService {
                 '_id': 0,
                 'entity': '$_id',
                 'type': 1,
-                're': 1
+                're': 1,
+                'len': { '$size': '$re' }
             } },
             { '$sort': { 'len': -1 } },
+            { '$project': {
+                'entity': 1,
+                'type': 1,
+                're': 1,
+            } },
             { '$limit': limit }
         ])
     }
