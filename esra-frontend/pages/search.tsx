@@ -24,7 +24,7 @@ const SearchPage: NextPage = () => {
   const [getExplainIdle, setGetExplainIdle] = useState<boolean>(true);
   const [getExplainIdleProbe, setGetExplainIdleProbe] = useState<boolean>(true);
   const [found409, setFound409] = useState<boolean>(false);
-  const [overview, setOverview] = useState<string| null>(null);
+  const [overview, setOverview] = useState<[{overview: string, question: string}]| null>(null);
   const [question, setQuestion] = useState<[string]| null>(null);
   
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
@@ -259,10 +259,11 @@ const SearchPage: NextPage = () => {
             <div className='flex flex-col w-full justify-start text-start p-4 border-[1px]'>
               <h3>Overview</h3>
               {
-                overview ? <p className='p-2 font-extralight text-sm'>
+                overview ? overview.map((e) => <p className='p-2 font-extralight text-sm'>
                   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                  {overview}
-                </p> : 
+                  {/* {overview} */}
+                  <mark className='bg-transparent text-cyan-800 font-normal'>{e["question"]}</mark>&nbsp;{e["overview"]}
+                </p>) : 
                 <div className="flex w-full animate-pulse">
                   <h3 className='flex flex-col items-start justify-start text-left w-full px-1.5 text-base font-semibold pt-1.5 gap-2'>
                     <div className="h-3 w-full bg-gray-200 rounded-full"></div>
