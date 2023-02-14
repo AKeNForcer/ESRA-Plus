@@ -10,7 +10,7 @@ from datetime import datetime
 pattern = r'[0-9]'
 
 class ExplainService:
-    def __init__(self, t5_arxiv_path='./models/mt5-small-finetuned-arxiv-cs', device='cuda'):
+    def __init__(self, db, t5_arxiv_path='./models/mt5-small-finetuned-arxiv-cs', device='cuda'):
         self.device = device
 
         self.tokenizer_lfqa = AutoTokenizer.from_pretrained("vblagoje/bart_lfqa")
@@ -24,6 +24,8 @@ class ExplainService:
 
         self.model_CE = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512, device=device)
         self.tokenizer_sentence = nltk.data.load('tokenizers/punkt/english.pickle')
+
+        self.factlist_col = db["factlists"]
 
     def _filter(self, output, _result_prefix, _result_suffix, end_token='<extra_id_1>'):
         # The first token is <unk> (inidex at 0) and the second token is <extra_id_0> (indexed at 32099)
@@ -183,10 +185,13 @@ class ExplainService:
             generated_question_sequences, skip_special_tokens=True)
         return decoded_sequences
     
-    def _calc_similiarity(self, query, sentences):
+    def _calc_similiarity(self, query, sentences, pair_zip=False):
         if type(query) != type([]):
             query = [query]
-        sentence_combinations = [(q, s) for q in query for s in sentences]
+        if pair_zip:
+            sentence_combinations = list(zip(query, sentences))
+        else:
+            sentence_combinations = [(q, s) for q in query for s in sentences]
         similarity_scores = self.model_CE.predict(sentence_combinations)
         return list(zip(similarity_scores, sentence_combinations))
     
@@ -308,6 +313,18 @@ class ExplainService:
             verbose
         )
         return [self._generate_answer(q, documents) for q in filtered_questions]
+
+    def overview_ner(self, 
+                     query, 
+                     search_result, 
+                     question_sim_threshold=4,
+                     query_sim_threshold=2, 
+                     min_doc=2, 
+                     top_k=5,
+                     verbose=False):
+        questions = self._gen_and_filter_ner_question(query, [r['paperId'] for r in search_result], 
+            question_sim_threshold, query_sim_threshold, min_doc, top_k)
+        return [(q, self._generate_answer(q, r['abstract'])) for q, r in zip(questions, search_result)]
     
     def explain2(self, query, abstract, verbose=False):
         sentences = sent_tokenize(abstract)
@@ -338,23 +355,74 @@ class ExplainService:
         
         return [preprocess_text]
         
-        encoded = self.T5_arxiv_tokenizer.encode_plus(ans, add_special_tokens=True, return_tensors='pt')
-        input_ids = encoded['input_ids'].to(self.device)
 
-        # Generaing 20 sequences with maximum length set to 5
-        outputs = self.T5_arxiv_model.generate(
-            input_ids=input_ids, 
-            num_beams=30,
-            num_return_sequences=10,
-            max_length=30)
-        
-        _0_index = ans.index('<extra_id_0>')
-        _result_prefix = ans[:_0_index]
-        _result_suffix = ans[_0_index+12:]  # 12 is the length of <extra_id_0>
+    def _ner_question_gen(self, paper_id_list):
+        cursor = self.factlist_col.aggregate([
+            {'$match': dict(paper_id={'$in': paper_id_list})},
+            { '$project': dict(_id=0, re=1) },
+            { '$unwind': '$re' },
+            { '$group': {
+                '_id': '$re'
+            } }
+        ])
+        questions = set()
+        for x in cursor:
+            entity1, entity2, relation = x['_id']
+            if relation == 'FEATURE-OF':
+                questions.add(f"What is some features of {entity2}?")
+                questions.add(f"What is {entity1}?")
+            elif relation == 'PART-OF':
+                questions.add(f"What are some parts of {entity2}?")
+                questions.add(f"What is {entity1}?")
+            elif relation == 'USED-FOR':
+                questions.add(f"What is {entity1} used for?")
+            elif relation == 'HYPONYM-OF':
+                questions.add(f"What is {entity2}?")
+                questions.add(f"Give me examples of {entity1}")
+            elif relation == 'COMPARE':
+                questions.add(f"Compare {entity1} to {entity2}")
+        questions = list(questions)
+        return questions
+    
+    def _get_top_k(self, query, documents, k):
+        return [x[1][1] for x in sorted(self._calc_similiarity(query, documents), key=lambda x: -x[0])[:k]]
 
-        results = [self._filter(o, _result_prefix, _result_suffix) for o in outputs]
-        ans = [results[0]]
-
-        return ans
-
-        # return self.T5_arxiv_tokenizer.batch_decode(outputs, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    def _union(self, documents, threshold=4):
+        sim_pair = self._calc_similiarity(documents, documents)
+        group = [i for i in range(len(documents))]
+        def find_group(i):
+            if i == group[i]:
+                return i
+            group[i] = find_group(group[i])
+            return group[i]
+        for (sim, _), (l, r) in zip(sim_pair, [(q, s) for q in range(len(documents)) for s in range(len(documents))]):
+            if sim >= threshold:
+                group[r] = find_group(l)
+        group_list = [[] for _ in range(len(documents))]
+        for i, g in enumerate(group):
+            group_list[find_group(g)].append(documents[i])
+        return [gl for gl in group_list if len(gl) > 0]
+    
+    def _select_most_related(self, query, document_set, threshold=1, min_doc=1):
+        sim = self._calc_similiarity(query, [d for s in document_set for d in s])
+        i = 0
+        score_result = []
+        for ds in document_set:
+            score = sim[i:i+len(ds)]
+            top = max(zip(score, ds), key=lambda x: x[0])
+            score_result.append((top[0][0], top[1]))
+            i = i+len(ds)
+        result = []
+        for s, d in sorted(score_result, key=lambda x: -x[0]):
+            if len(result) < min_doc:
+                result.append(d)
+                continue
+            if s < threshold:
+                break
+            result.append(d)
+        return result
+    
+    def _gen_and_filter_ner_question(self, query, paper_id_list, question_sim_threshold=4, query_sim_threshold=2, min_doc=2, top_k=5):
+        questions = self._ner_question_gen(paper_id_list)
+        question_group = self._union(questions, question_sim_threshold)
+        return self._select_most_related(query, question_group, query_sim_threshold, min_doc)[:top_k]
