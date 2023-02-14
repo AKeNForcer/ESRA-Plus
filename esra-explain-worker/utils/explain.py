@@ -368,19 +368,20 @@ class ExplainService:
         questions = set()
         for x in cursor:
             entity1, entity2, relation = x['_id']
+            print(entity1, entity2, relation, sep = " ")
             if relation == 'FEATURE-OF':
-                questions.add(f"What is some features of {entity2}?")
+                questions.add(f"What are some features of {entity2}?")
                 questions.add(f"What is {entity1}?")
             elif relation == 'PART-OF':
                 questions.add(f"What are some parts of {entity2}?")
                 questions.add(f"What is {entity1}?")
-            elif relation == 'USED-FOR':
-                questions.add(f"What is {entity1} used for?")
-            elif relation == 'HYPONYM-OF':
-                questions.add(f"What is {entity2}?")
-                questions.add(f"Give me examples of {entity1}")
-            elif relation == 'COMPARE':
-                questions.add(f"Compare {entity1} to {entity2}")
+#             elif relation == 'USED-FOR':
+#                 questions.add(f"What is {entity1} used for?")
+#             elif relation == 'HYPONYM-OF':
+#                 questions.add(f"What is {entity2}?")
+#                 questions.add(f"Give me examples of {entity1}")
+#             elif relation == 'COMPARE':
+#                 questions.add(f"Compare {entity1} to {entity2}")
         questions = list(questions)
         return questions
     
