@@ -113,7 +113,8 @@ def gen_explain():
 def gen_overview():
     query = request.json["query"]
     result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=5)).json()['result']
-    overview_list = exps.overview_ner(query, result, verbose=False)
+    # overview_list = exps.overview_ner(query, result, verbose=False)
+    overview_list = exps.overview(query, [r['abstract'] for r in result], verbose=False)
     overview_col.insert_one({
         "created_date": datetime.utcnow(),
         "expire_date": datetime.utcnow() + EXPIRE_DURATION,

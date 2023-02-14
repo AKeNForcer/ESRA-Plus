@@ -312,7 +312,7 @@ class ExplainService:
             template_questions,
             verbose
         )
-        return [self._generate_answer(q, documents) for q in filtered_questions]
+        return [(q, self._generate_answer(q, documents)) for q in filtered_questions]
 
     def overview_ner(self, 
                      query, 
@@ -324,7 +324,8 @@ class ExplainService:
                      verbose=False):
         questions = self._gen_and_filter_ner_question(query, [r['paperId'] for r in search_result], 
             question_sim_threshold, query_sim_threshold, min_doc, top_k)
-        return [(q, self._generate_answer(q, r['abstract'])) for q, r in zip(questions, search_result)]
+        documents = [r['abstract'] for r in search_result]
+        return [(q, self._generate_answer(q, documents)) for q in questions]
     
     def explain2(self, query, abstract, verbose=False):
         sentences = sent_tokenize(abstract)
@@ -368,7 +369,7 @@ class ExplainService:
         questions = set()
         for x in cursor:
             entity1, entity2, relation = x['_id']
-            print(entity1, entity2, relation, sep = " ")
+            # print(entity1, entity2, relation, sep = " ")
             if relation == 'FEATURE-OF':
                 questions.add(f"What are some features of {entity2}?")
                 questions.add(f"What is {entity1}?")
