@@ -18,6 +18,8 @@ const SearchPage: NextPage = () => {
   const sortBy = (["RELEVANCE", "NEWEST", "OLDEST"] as Array<string | string[] | undefined>).includes(router.query.sort) ? router.query.sort : "RELEVANCE" 
   const [realSearchResult, setRealSearchResult] = useState<Array<{ [key: string]: any }>>([]);
   const [hasMore, setHasMore] = useState(false);
+  const [isLoadMore, setIsLoadMore] = useState(false);
+  const [initialVal, setInitialVal] = useState<{query: string | null, sortBy: string | null}>({query: null, sortBy: null});
   const [showMinimal, setShowMinimal] = useState(false);
   const [showMinimalBar, setShowMinimalBar] = useState(false);
   const [explanation, setExplanation] = useState<{ [key: string]: any }>({});
@@ -36,8 +38,9 @@ const SearchPage: NextPage = () => {
   const NEXT_PUBLIC_TOTAL_RESULT_LIMIT = parseInt(process.env.NEXT_PUBLIC_TOTAL_RESULT_LIMIT ?? '100');
   const mutex = useRef(new Mutex());
 
-  const getExplanation = async (idx: number, initial_query: string, explanation: { [key: string]: any }) => {
-    if (query !== initial_query) return;
+  const getExplanation = async (idx: number, initialQuery: string, initialSortBy: string, explanation: { [key: string]: any }) => {
+    if (query !== initialQuery || sortBy !== initialSortBy) {setExplanation({}); return;}
+    setInitialVal({query: initialQuery, sortBy: initialSortBy});
     setGetExplainIdleProbe(false);
     if (idx >= realSearchResult.length) {
       setGetExplainIdleProbe(true);
@@ -58,7 +61,7 @@ const SearchPage: NextPage = () => {
       setExplanation({...explanation});
       console.log(idx, "send explanation request:", realSearchResult[idx].paperId);
       axios.get(EXPLAIN_URL, { params: { query: query, paperId: realSearchResult[idx]['paperId'], wait: 45, gen: 1 } }).then(response => {
-        if (query !== initial_query) return;
+        if (query !== initialQuery || sortBy !== initialSortBy) {setExplanation({}); return;}
         mutex.current.runExclusive(async function () {
           setExplain(response, idx);
           if (idx+1 >= realSearchResult.length || explanation[realSearchResult[idx+1].paperId]) {
@@ -77,7 +80,7 @@ const SearchPage: NextPage = () => {
         setExplanation({...explanation});
         console.log(idx+1, "send explanation request:", realSearchResult[idx+1].paperId);
         axios.get(EXPLAIN_URL, { params: { query: query, paperId: realSearchResult[idx+1]['paperId'], wait: 45, gen: 1 } }).then(response => {
-          if (query !== initial_query) return;
+          if (query !== initialQuery || sortBy !== initialSortBy) {setExplanation({}); return;}
           mutex.current.runExclusive(async function () {
             setExplain(response, idx+1);
             if (explanation[realSearchResult[idx].paperId]) {
@@ -89,7 +92,7 @@ const SearchPage: NextPage = () => {
           if (error.response.status === 409 ||
               error.response.status === 503) trig409();
           else throw error;
-        });;
+        });
       } else {
         console.log("get explain stopped #2", realSearchResult.length, Object.keys(explanation).length, getExplainIdleProbe);
         setGetExplainIdleProbe(true);
@@ -103,8 +106,13 @@ const SearchPage: NextPage = () => {
   useEffect(() => {
     if (getExplainIdleProbe) {
       console.log(getExplainIdleProbe, realSearchResult.length, Object.keys(explanation).length)
-      if (realSearchResult.length > Object.keys(explanation).length) {
+      if (realSearchResult.length > Object.keys(explanation).length || query !== initialVal.query || sortBy !== initialVal.sortBy) {
         setGetExplainIdle(!getExplainIdle);
+        if (query !== initialVal.query || sortBy !== initialVal.sortBy) {
+          setExplanation({});
+        }
+      } else {
+        console.log(query, initialVal.query, sortBy, initialVal.sortBy, explanation);
       }
     }
   }, [getExplainIdleProbe])
@@ -113,7 +121,7 @@ const SearchPage: NextPage = () => {
     if (getExplainIdleProbe) {
       for (let i=0; i<realSearchResult.length; i++) {
         if (explanation[realSearchResult[i].paperId] === undefined) {
-          getExplanation(i, query as string, {...explanation});
+          getExplanation(i, query as string, sortBy as string, {...explanation});
           break
         }
       }
@@ -128,11 +136,13 @@ const SearchPage: NextPage = () => {
   useEffect(() => {
     console.log(`query changed: ${query}`);
     if (query){
+      setIsLoadMore(false);
       setRealSearchResult([]);
       setHasMore(false);
       setOverview(null);
       setQuestion(null);
       setFactlist(null);
+      setExplanation({});
       const SEARCH_URL = new URL('search', origin).toString();
       axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INITIAL_RESULT_LIMIT, sort: sortBy } }).then(async response => {
         setRealSearchResult(response.data.result);
@@ -160,6 +170,7 @@ const SearchPage: NextPage = () => {
 
   const loadMore = async () => {
     if (query){
+      setIsLoadMore(true);
       const SEARCH_URL = new URL('search', origin).toString();
       axios.get(SEARCH_URL, { params: { query: query, limit: process.env.NEXT_PUBLIC_INCREMENT_RESULT_LIMIT, skip: realSearchResult.length, sort: sortBy } }).then(async response => {
         const newRes = [...realSearchResult, ...response.data.result];
@@ -167,6 +178,7 @@ const SearchPage: NextPage = () => {
           setHasMore(false);
         }
         setRealSearchResult(newRes);
+        setIsLoadMore(false);
       });
     }
   };
@@ -236,13 +248,16 @@ const SearchPage: NextPage = () => {
             </div>
             {
               realSearchResult ?
-              <InfiniteScroll
-                dataLength={realSearchResult.length}
-                next={loadMore}
-                hasMore={hasMore}
-                loader={<h4 className='flex items-center justify-center w-full p-3'>Loading...</h4>}
-                endMessage={<div className='w-full h-12'/>}
-                className='flex flex-col items-center justify-center w-full'
+              // <InfiniteScroll
+              //   dataLength={realSearchResult.length}
+              //   next={loadMore}
+              //   hasMore={hasMore}
+              //   loader={<h4 className='flex items-center justify-center w-full p-3'>Loading...</h4>}
+              //   endMessage={<div className='w-full h-12'/>}
+              //   className='flex flex-col items-center justify-center w-full'
+              // >
+              <div
+                className='flex flex-col items-center justify-center w-full pb-24'
               >
                 <ul className='flex flex-col items-center justify-center w-full gap-3'>
                   { realSearchResult.length > 0?
@@ -256,7 +271,12 @@ const SearchPage: NextPage = () => {
                     Array(NEXT_PUBLIC_TOTAL_RESULT_LIMIT).fill(<RealSearchResultLoading/>)
                   }
                 </ul>
-              </InfiniteScroll> :
+                {
+                  isLoadMore ? 
+                  <div className='h-10 p-10'>Loading...</div> :
+                  <div className='h-10 p-10 text-cyan-800 hover:underline hover:cursor-pointer' onClick={loadMore}>See more</div>
+                }
+              </div> :
               null
             }
           </div>
