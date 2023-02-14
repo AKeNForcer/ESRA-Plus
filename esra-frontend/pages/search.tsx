@@ -285,8 +285,8 @@ const SearchPage: NextPage = () => {
               <h3 className='w-full pb-3'>Fact list</h3>
               {
                 factlist ?
-                <div className='flex flex-col w-full justify-start ml-3 gap-2 pr-3'>
-                  {factlist.map((e) => <div className='flex flex-col justify-start items-start text-start border-[1px] rounded-lg pb-3'>
+                <div className='flex flex-col w-full justify-start ml-3 pr-7'>
+                  {factlist.map((e) => <div className='flex flex-col justify-start items-start text-start border-t-[1px] pb-3 pt-1'>
                     <div className='flex flex-wrap w-full p-2'>
                       <div className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs'>{e.type}</div>
                       &nbsp;
