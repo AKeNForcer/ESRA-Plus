@@ -36,14 +36,15 @@ class ExplainService:
         else:
             return _result_prefix + _txt + _result_suffix
 
-    def explain(self, query, abstract, join=False):
+    def explain(self, query, abstract, join=False, verbose=False):
         before = datetime.now()
 
         sentences = sent_tokenize(abstract)
         sentence_combinations = [[query, sentence] for sentence in sentences]
         similarity_scores = self.model_CE.predict(sentence_combinations)
 
-        curr = datetime.now(); print("similarity_scores = self.model_CE.predict(sentence_combinations)", curr - before); before = curr
+        curr = datetime.now()
+        if verbose: print("similarity_scores = self.model_CE.predict(sentence_combinations)", curr - before); before = curr
         
 #         qualified_sentences = []
 #         for i in range(len(sentences)):
@@ -53,7 +54,8 @@ class ExplainService:
         input_ids = self.tokenizer_T5.encode(abstract, return_tensors = 'pt')
         outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.90, num_return_sequences = 5)
 
-        curr = datetime.now(); print("outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.90, num_return_sequences = 5)", curr - before); before = curr
+        curr = datetime.now()
+        if verbose: print("outputs = self.model_T5.generate(input_ids = input_ids, max_length = 64, do_sample = True, top_p = 0.90, num_return_sequences = 5)", curr - before); before = curr
 
         questions = []
         for i in range(len(outputs)):
@@ -64,7 +66,8 @@ class ExplainService:
         #     for i in range(len(outputs)):
         #         questions.append([query, self.tokenizer_T5.decode(outputs[i], skip_special_tokens = True)])
         
-        curr = datetime.now(); print("for sentence in qualified_sentences:", curr - before); before = curr
+        curr = datetime.now();
+        if verbose: print("for sentence in qualified_sentences:", curr - before); before = curr
 
         similarity_scores_questions = self.model_CE.predict(questions)
         best_gen_question = questions[np.argmax(similarity_scores_questions)]
@@ -73,7 +76,8 @@ class ExplainService:
         conditioned_doc = "<P> " + " <P> ".join([d for d in documents])
         query_and_docs = "question: {} context: {}".format(best_gen_question[1], conditioned_doc)
 
-        curr = datetime.now(); print("similarity_scores_questions = self.model_CE.predict(questions)", curr - before); before = curr
+        curr = datetime.now();
+        if verbose: print("similarity_scores_questions = self.model_CE.predict(questions)", curr - before); before = curr
 
         model_input = self.tokenizer_lfqa(query_and_docs, truncation=True, padding=True, return_tensors="pt")
         generated_answers_encoded = self.model_lfqa.generate(
@@ -92,10 +96,11 @@ class ExplainService:
             num_return_sequences=1)
         
         
-        curr = datetime.now(); print("generated_answers_encoded = self.model_lfqa.generate(", curr - before); before = curr
+        curr = datetime.now()
+        if verbose: print("generated_answers_encoded = self.model_lfqa.generate(", curr - before); before = curr
         
         ans = self.tokenizer_lfqa.batch_decode(generated_answers_encoded, skip_special_tokens=True, clean_up_tokenization_spaces=True)        
-        print("ans", ans)
+        if verbose: print("ans", ans)
         if "For example," not in abstract:
             try:
                 idx = ans[0].index("For example,")
@@ -107,7 +112,7 @@ class ExplainService:
         sentence_combinations = [[abstract, sentence] for sentence in sentences]
         similarity_scores = self.model_CE.predict(sentence_combinations)
         if similarity_scores.mean()<0:
-            ans = self.explain2(query, abstract)
+            ans = self.explain2(query, abstract, verbose=verbose)
             
         if "I'm not sure" in ans[0] :
             preprocess_text = ans[0].strip().replace("\n","")
@@ -150,7 +155,8 @@ class ExplainService:
 
         sentences = [*sentences]
         
-        curr = datetime.now(); print('''if "I'm not sure" in ans[0] :''', curr - before); before = curr
+        curr = datetime.now()
+        if verbose: print('''if "I'm not sure" in ans[0] :''', curr - before); before = curr
 
         if join:
             return ' '.join(sentences)
@@ -337,12 +343,15 @@ class ExplainService:
         del sim_kw[sim_kw_i_max]
         if verbose: print("\nsim_kw_max", sim_kw_max)
         
-        sim_q = self._calc_similiarity(query, [s[1][1] for s in sim_kw])
-        if verbose: print("\nsim_q", sim_q)
-        sim_q_max = max(sim_q, key=lambda x: x[0])
-        if verbose: print("\nsim_q_max", sim_q_max)
+        if len(sim_kw) > 0:
+            sim_q = self._calc_similiarity(query, [s[1][1] for s in sim_kw])
+            if verbose: print("\nsim_q", sim_q)
+            sim_q_max = max(sim_q, key=lambda x: x[0])
+            if verbose: print("\nsim_q_max", sim_q_max)
+        else:
+            sim_q_max = None
         
-        preprocess_text = (f"{sim_q_max[1][1]} {sim_kw_max[1][1]}").strip().replace("\n"," ").strip()
+        preprocess_text = (f"{sim_q_max[1][1]} {sim_kw_max[1][1]}" if sim_q_max else sim_kw_max[1][1]).strip().replace("\n"," ").strip()
 #         t5_prepared_Text = "summarize: " + preprocess_text
 #         tokenized_text = self.T5_arxiv_tokenizer.encode(t5_prepared_Text, return_tensors="pt", add_special_tokens=True).to(self.device)
 #         summary_ids = self.T5_arxiv_model.generate(
