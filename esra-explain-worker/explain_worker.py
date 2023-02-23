@@ -79,7 +79,7 @@ def gen_explain():
     except IndexError:
         return "not found"
 
-    explain_paragraph = exps.explain(
+    explain_paragraph = exps.explain2(
         query,
         paper['abstract'] #f"( id: {paper['id']} | authors: {paper['authors']} | title: {paper['title']}) {paper['abstract']}"
     )
