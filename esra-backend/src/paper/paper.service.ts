@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { catchError, firstValueFrom } from 'rxjs';
 
@@ -18,12 +18,24 @@ export class PaperService {
 
     async getPaper(paperId: string) {
         const { data } = await firstValueFrom(
-            this.httpService.get((new URL(`paper/${paperId}`, this.paperServiceUrl)).toString()).pipe(
+            this.httpService.get((new URL(`paper?paperId=${paperId}`, this.paperServiceUrl)).toString()).pipe(
                 catchError((error) => {
                     throw error;
                 }),
               ),
         );
+        data.update_date = new Date(data.update_date)
         return data;
+    }
+
+    async paperExists(paperId: string): Promise<boolean> {
+        try {
+            const res = await this.getPaper(paperId);
+            return !(!res);
+        } catch(error) {
+            if (error.response.status === HttpStatus.NOT_FOUND) {
+                return false;
+            }
+        }
     }
 }

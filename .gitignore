@@ -1,3 +1,9 @@
 .DS_Store
 *.env
 esra-search/pipelines/gpl/*
+esra-frontend/dist/*
+.playground/*
+identity.public
+identity.secret
+id.public
+id.secret

@@ -7,6 +7,7 @@ import { PaperService } from './paper.service';
 @Module({
   imports: [ConfigModule, HttpModule],
   controllers: [PaperController],
-  providers: [PaperService]
+  providers: [PaperService],
+  exports: [PaperService]
 })
 export class PaperModule {}

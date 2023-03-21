@@ -13,6 +13,7 @@ import { SearchService } from './search.service';
     MongooseModule.forFeature([{ name: SearchResult.name, schema: SearchResultSchema }])
   ],
   controllers: [SearchController],
-  providers: [SearchService]
+  providers: [SearchService],
+  exports: [SearchService]
 })
 export class SearchModule {}

@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  zerotier:
+    image: akenforcer/esra-proxy-gateway-2
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    environment:
+      ZEROTIER_IDENTITY_PUBLIC: $ZEROTIER_IDENTITY_PUBLIC
+      ZEROTIER_IDENTITY_SECRET: $ZEROTIER_IDENTITY_SECRET
+      ZEROTIER_NETWORK_ID: $ZEROTIER_NETWORK_ID
+    ports:
+      - 3380:3380
+    restart: unless-stopped

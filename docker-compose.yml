@@ -1,0 +1,187 @@
+version: '3.7'
+networks:
+  esra:
+  esra-db-es:
+    external: true
+services:
+  paper:
+    image: esra-paper
+    restart: always
+    environment:
+      MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
+      MAIN_ELASTICSEARCH_USER: elastic
+      MAIN_ELASTICSEARCH_PASS: esra_CP44
+      PAPER_DOWNLOAD_URL: 'https://arxiv.org/pdf/{}.pdf'
+      ARXIV_URL: 'https://arxiv.org/abs/{}'
+    networks:
+      - esra
+      - esra-db-es
+  
+  search-0:
+    image: esra-search
+    restart: always
+    environment:
+      MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
+      MAIN_ELASTICSEARCH_USER: elastic
+      MAIN_ELASTICSEARCH_PASS: esra_CP44
+      DEVICE: 'cuda:0'
+      BM25_SIZE: 100
+      GPL_TSDAE_SIZE: 100
+      USE_GPL_TSDAE_COMPLETION: 'no'
+    volumes:
+      - ./esra-search/pipelines/gpl/:/esra/pipelines/gpl/
+    networks:
+      - esra
+      - esra-db-es
+    deploy:
+      resources:
+        reservations:
+          devices:
+          -  driver: nvidia
+             count: all
+             capabilities: [gpu]
+  search-1:
+    image: esra-search
+    restart: always
+    environment:
+      MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
+      MAIN_ELASTICSEARCH_USER: elastic
+      MAIN_ELASTICSEARCH_PASS: esra_CP44
+      DEVICE: 'cuda:1'
+      BM25_SIZE: 100
+      GPL_TSDAE_SIZE: 100
+      USE_GPL_TSDAE_COMPLETION: 'no'
+    volumes:
+      - ./esra-search/pipelines/gpl/:/esra/pipelines/gpl/
+    networks:
+      - esra
+      - esra-db-es
+    deploy:
+      resources:
+        reservations:
+          devices:
+          -  driver: nvidia
+             count: all
+             capabilities: [gpu]
+  search-load-balancer:
+    image: esra-search-load-balancer
+    links:
+      - search-0
+      - search-1
+    restart: always
+    networks:
+      - esra
+  
+  explain-worker-0:
+    image: esra-explain-worker
+    restart: always
+    volumes:
+      - ./esra-explain-worker/models/:/esra/models/
+    environment:
+      DEVICE: 'cuda:0'
+      MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
+      MAIN_ELASTICSEARCH_USER: elastic
+      MAIN_ELASTICSEARCH_PASS: esra_CP44
+      BACKEND_URL: http://backend:3001/
+      MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
+      EXPIRE_DURATION: 300000
+      PORT: 5559
+    networks:
+      - esra
+      - esra-db-es
+    deploy:
+      resources:
+        reservations:
+          devices:
+          -  driver: nvidia
+             count: all
+             capabilities: [gpu]
+  explain-worker-1:
+    image: esra-explain-worker
+    restart: always
+    volumes:
+      - ./esra-explain-worker/models/:/esra/models/
+    environment:
+      DEVICE: 'cuda:1'
+      MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
+      MAIN_ELASTICSEARCH_USER: elastic
+      MAIN_ELASTICSEARCH_PASS: esra_CP44
+      BACKEND_URL: http://backend:3001/
+      MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
+      EXPIRE_DURATION: 300000
+      PORT: 5559
+    networks:
+      - esra
+      - esra-db-es
+    deploy:
+      resources:
+        reservations:
+          devices:
+          -  driver: nvidia
+             count: all
+             capabilities: [gpu]
+  explain-controller:
+    image: esra-explain-controller
+    restart: always
+    environment:
+      WORKERS_URL: '"http://explain-worker-0:5559/","http://explain-worker-1:5559/"'
+      WORK_LIMIT: 2
+      PORT: 5559
+    networks:
+      - esra
+      - esra-db-es
+    links:
+      - explain-worker-0
+      - explain-worker-1
+
+  backend:
+    image: esra-backend
+    restart: always
+    environment:
+      SEARCH_ENGINE_URL: http://search-load-balancer
+      SEARCH_ENGINE_RESULT_LIMIT: 100
+      SEARCH_ENGINE_COMPLETE_LIMIT: 8
+      PAPER_SERVICE_URL: http://paper:5000
+      MONGODB_URI: mongodb://esra:esra@mongo_mongo_1:27017/?authMechanism=DEFAULT
+      MONGODB_DB_NAME: esra_plus
+      QUERY_EXPIRE_DURATION: 300000
+      EXPLAIN_URL: http://explain-controller:5559
+    networks:
+      - esra
+      - esra-db-es
+  frontend:
+    image: esra-frontend
+    restart: always
+    networks:
+      - esra
+    environment:
+      HOST: 0.0.0.0
+      NEXT_PUBLIC_INITIAL_RESULT_LIMIT: 10
+      NEXT_PUBLIC_INCREMENT_RESULT_LIMIT: 10
+      NEXT_PUBLIC_TOTAL_RESULT_LIMIT: 100
+  
+  gateway:
+    image: esra-nginx
+    links:
+      - backend
+      - frontend
+      - search-load-balancer
+    restart: always
+    networks:
+      - esra
+    ports:
+      - '6680:80'
+
+  reverse-proxy-gateway:
+    image: reverse-proxy-gateway
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    environment:
+      ZEROTIER_IDENTITY_PUBLIC: $ZEROTIER_IDENTITY_PUBLIC
+      ZEROTIER_IDENTITY_SECRET: $ZEROTIER_IDENTITY_SECRET
+      ZEROTIER_NETWORK_ID: $ZEROTIER_NETWORK_ID
+    restart: unless-stopped
+    networks:
+      - esra

@@ -5,11 +5,16 @@ import { SearchModule } from './search/search.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PaperModule } from './paper/paper.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ExplainModule } from './explain/explain.module';
 
 @Module({
   imports: [
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [
+        ConfigModule,
+        ScheduleModule.forRoot()
+      ],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
         uri: config.get<string>('MONGODB_URI'),
@@ -18,7 +23,8 @@ import { PaperModule } from './paper/paper.module';
     }),
     ConfigModule.forRoot(),
     SearchModule,
-    PaperModule
+    PaperModule,
+    ExplainModule
   ],
   controllers: [AppController],
   providers: [AppService],

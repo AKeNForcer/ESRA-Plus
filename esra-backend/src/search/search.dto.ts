@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { SortType } from 'src/share/enum/sort.enum';
 
 
 export class SearchDTO {
@@ -22,6 +23,10 @@ export class SearchDTO {
   @IsOptional()
   @Transform(({ value }) => ((value == 'true' || value == 1) ?? false))
   no_cache: boolean;
+
+  @IsOptional()
+  @IsEnum(SortType)
+  sort: SortType
 }
 
 export class CompleteDTO {

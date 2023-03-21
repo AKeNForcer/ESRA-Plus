@@ -4,15 +4,15 @@ import { Document } from 'mongoose';
 @Schema()
 export class SearchResult {
   @Prop({ default: new Date() })
-  created_date: string;
+  created_date: Date;
 
   @Prop({ default: new Date() })
-  updated_date: string;
+  updated_date: Date;
 
   @Prop({ type: Date })
   expire_date: Date;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, index: true })
   query: string;
 
   @Prop({ type: String, required: true })
@@ -38,6 +38,9 @@ export class SearchResult {
 
   @Prop({ type: String, required: true })
   authors: string;
+
+  @Prop({ type: Date, required: true })
+  update_date: Date;
 }
 export type SearchResultDocument = SearchResult & Document;
 export const SearchResultSchema = SchemaFactory.createForClass(SearchResult);

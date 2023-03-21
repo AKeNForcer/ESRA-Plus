@@ -7,10 +7,12 @@ class CrossEncoderReranker:
     def __init__(
         self, 
         retrivers,
+        hosts,
+        basic_auth,
         device='cuda'
     ):
         self.retrivers = retrivers
-        self.main_es = Elasticsearch(["tcp://172.18.0.2:9200"], basic_auth=("elastic", "esra_CP44"),)
+        self.main_es = Elasticsearch(hosts, basic_auth=basic_auth,)
         self.model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', device=device)
     
     def search_paper(self, retrived_papers, size):
@@ -25,12 +27,12 @@ class CrossEncoderReranker:
                 }
             },
             _source=False, 
-            fields=["id", "title", "abstract"],
+            fields=["id", "title", "abstract", "authors"],
             size=size
         )["hits"]["hits"]
 
     def cross_encoder_rerank(self, query, retrived_papers, size, from_pipeline):
-        corpus = [x['abstract'][0] for x in retrived_papers]
+        corpus = [f"( id: {x['id'][0]} | authors: {x['authors'][0]} ) {x['title'][0]}. {x['abstract'][0]}" for x in retrived_papers]
         sentence_combinations = [[query, corpus_sentence] for corpus_sentence in corpus]
         similarity_scores = self.model.predict(sentence_combinations)
         sim_scores_argsort = np.argsort(similarity_scores)[::-1]
@@ -67,8 +69,8 @@ class CrossEncoderReranker:
 
 
 class ThreadCrossEncoderReranker(CrossEncoderReranker):
-    def __init__(self, retrivers, device='cuda'):
-        super().__init__(retrivers, device)
+    def __init__(self, retrivers, hosts, basic_auth, device='cuda'):
+        super().__init__(retrivers, hosts, basic_auth, device)
 
     def _retrive(self, query, retriver):
         return retriver["retriver"].eval(query, retriver["size"])
