@@ -5,3 +5,5 @@ esra-frontend/dist/*
 .playground/*
 identity.public
 identity.secret
+id.public
+id.secret

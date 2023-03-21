@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   zerotier:
-    image: proxy-gateway-2
+    image: akenforcer/esra-proxy-gateway-2
     cap_add:
       - NET_ADMIN
     devices:
