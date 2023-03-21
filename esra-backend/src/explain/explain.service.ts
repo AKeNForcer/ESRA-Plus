@@ -53,7 +53,7 @@ export class ExplainService {
             return
         }
         await firstValueFrom(
-            this.httpService.post(this.overviewUrl, [{query, rank: 0}])
+            this.httpService.post(this.overviewUrl, [{query, rank: 5}])
         );
     }
 
