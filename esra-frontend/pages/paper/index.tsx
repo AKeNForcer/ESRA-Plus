@@ -11,7 +11,17 @@ import { ResultPaper } from '../../components/paper/result-paper'
 import Link from 'next/link'
 import { HeadLogo } from '../../components/head-logo'
 
+import { Viewer } from '@react-pdf-viewer/core'; // install this library
+// Plugins
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout'; // install this library
+// Import the styles
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+// Worker
+import { Worker } from '@react-pdf-viewer/core'; // install this library
+
 const PaperPage: NextPage = () => {
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const router = useRouter();
   const { query, paperId } = router.query;
   const [notFound, setNotFound] = useState<boolean>(false);
@@ -117,6 +127,16 @@ const PaperPage: NextPage = () => {
                   <ul className='flex flex-col items-center justify-center w-full gap-3'>
                     {(query !== undefined && paper !== undefined) ? <ResultPaper query={query} result={paper} explanation={explanation} /> : null}
                   </ul>
+                  <div className='flex flex-col w-full h-[600px]'>
+                    {/* show pdf conditionally (if we have one)  */}
+                    {paper&&<><Worker workerUrl="https://unpkg.com/pdfjs-dist@3.5.141/build/pdf.worker.min.js">
+                      <Viewer fileUrl={paper["pdf"]}
+                        plugins={[defaultLayoutPluginInstance]} />
+                    </Worker></>}
+
+                    {/* if we dont have pdf or viewPdf state is null */}
+                    {!paper&&<>No pdf file selected</>}
+                  </div>
                 </div>
                 <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[300px] items-center gap-3'>
                   <div className='flex flex-row w-full justify-center items-center gap-3'>
