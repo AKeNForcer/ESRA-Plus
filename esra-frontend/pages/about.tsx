@@ -70,7 +70,7 @@ const Home: NextPage = () => {
             </ul>
           </div>
           <div className='flex flex-col items-start justify-start w-full'>
-            <h2 className='text-cyan-800 text-start font-semibold text-2xl mb-3'>Contributors</h2>
+            <h2 className='text-cyan-800 text-start font-semibold text-2xl mb-3'>Main Contributors</h2>
             {/* <p className='text-start'>
               We are extremely thankful to everyone who contributes to the project, supports or provides helpful suggestions. We greatly appreciate the help from:
             </p> */}
