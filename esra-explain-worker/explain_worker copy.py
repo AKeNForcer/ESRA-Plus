@@ -153,7 +153,7 @@ def get_paper_chat_response(query, text_input):
 
     return tokenizer.decode(tokens[0], skip_special_tokens=True).split('<ans>')[-1]
 
-print("+++ model ready +++")
+
 
 
 app = Flask(__name__)

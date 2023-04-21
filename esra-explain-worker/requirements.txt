@@ -16,3 +16,7 @@ gevent==22.10.2
 nltk==3.8.1
 transformers==4.26.0
 sentence-transformers==2.2.2
+faiss-cpu==1.7.3
+faiss-gpu==1.7.2
+pdfplumber==0.8.0
+beir==1.0.0

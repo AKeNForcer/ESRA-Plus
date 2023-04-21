@@ -6,7 +6,7 @@ import { Cron } from '@nestjs/schedule';
 import { Model, Types } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
 import { SearchService } from 'src/search/search.service';
-import { Explanation, ExplanationDocument, FactList, FactListDocument, Overview, OverviewDocument, Question, QuestionDocument } from './explain.model';
+import { Chat, ChatDocument, Explanation, ExplanationDocument, FactList, FactListDocument, Overview, OverviewDocument, Question, QuestionDocument } from './explain.model';
 
 @Injectable()
 export class ExplainService {
@@ -14,6 +14,7 @@ export class ExplainService {
     overviewUrl: string;
     factListUrl: string;
     questionUrl: string;
+    chatUrl: string;
     constructor (
         private readonly configService: ConfigService,
         private readonly httpService: HttpService,
@@ -21,11 +22,13 @@ export class ExplainService {
         @InjectModel(Explanation.name) private explanationModel: Model<ExplanationDocument>,
         @InjectModel(Overview.name) private overviewModel: Model<OverviewDocument>,
         @InjectModel(Question.name) private questionModel: Model<QuestionDocument>,
-        @InjectModel(FactList.name) private factListModel: Model<FactListDocument>) {
+        @InjectModel(FactList.name) private factListModel: Model<FactListDocument>,
+        @InjectModel(Chat.name) private chatModel: Model<ChatDocument>) {
             this.explainUrl = new URL("explain", this.configService.get<string>('EXPLAIN_URL')).toString();
             this.overviewUrl = new URL("overview", this.explainUrl).toString();
             this.questionUrl = new URL("question", this.explainUrl).toString();
             this.factListUrl = new URL("factlist", this.explainUrl).toString();
+            this.chatUrl = new URL("chat", this.explainUrl).toString();
         }
 
     async getExplanation(query: string, paperId: string): Promise<[{ order: number, sentence: string, value: number }] | null> {
@@ -139,12 +142,28 @@ export class ExplainService {
         ])
     }
 
+    async getChat(query: string, paperId: string): Promise<string | null> {
+        const chatAns = await this.chatModel.findOne({query, paperId}, {_id: 0, answer: 1});
+        return chatAns ? chatAns.answer : null;
+    }
+
+    async generateChat(query: string, paperId: string): Promise<void> {
+        if (await this.chatModel.exists({query, paperId})) {
+            return
+        }
+        const rank = 1;
+        await firstValueFrom(
+            this.httpService.post(this.chatUrl, [{query, paperId, rank}])
+        );
+    }
+
     @Cron("*/10 * * * * *")
     async clean() {
         await Promise.all([
             this.explanationModel.deleteMany({ expire_date: { $lte: new Date() } }),
             this.overviewModel.deleteMany({ expire_date: { $lte: new Date() } }),
-            this.questionModel.deleteMany({ expire_date: { $lte: new Date() } })
+            this.questionModel.deleteMany({ expire_date: { $lte: new Date() } }),
+            this.chatModel.deleteMany({ expire_date: { $lte: new Date() } }),
         ]);
     }
 }

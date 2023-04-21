@@ -49,3 +49,22 @@ export class FactlistDTO {
   @Min(0)
   limit: string;
 }
+
+export class ChatDTO {
+  @IsString()
+  @IsNotEmpty()
+  @Length(1)
+  query: string;
+
+  @IsString()
+  @IsNotEmpty()
+  paperId: string;
+
+  @IsOptional()
+  wait: number | typeof NaN;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['0', '1'])
+  gen: string | boolean;
+}

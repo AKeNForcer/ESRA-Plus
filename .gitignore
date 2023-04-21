@@ -7,3 +7,7 @@ identity.public
 identity.secret
 id.public
 id.secret
+
+esra-explain-worker/temp/*
+esra-explain-worker/papers_txt/*
+esra-explain-worker/models/gpl/*

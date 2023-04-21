@@ -77,6 +77,8 @@ services:
     restart: always
     volumes:
       - ./esra-explain-worker/models/:/esra/models/
+      - ./esra-explain-worker/temp/:/esra/temp/
+      - ./esra-explain-worker/papers_txt/:/esra/papers_txt/
     environment:
       DEVICE: 'cuda:0'
       MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200
@@ -101,6 +103,8 @@ services:
     restart: always
     volumes:
       - ./esra-explain-worker/models/:/esra/models/
+      - ./esra-explain-worker/temp/:/esra/temp/
+      - ./esra-explain-worker/papers_txt/:/esra/papers_txt/
     environment:
       DEVICE: 'cuda:1'
       MAIN_ELASTICSEARCH_HOST: tcp://172.18.0.6:9200

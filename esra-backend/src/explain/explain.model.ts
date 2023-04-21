@@ -75,3 +75,23 @@ export class Question {
 }
 export type QuestionDocument = Question & Document;
 export const QuestionSchema = SchemaFactory.createForClass(Question);
+
+@Schema()
+export class Chat {
+  @Prop({ default: new Date() })
+  created_date: Date;
+
+  @Prop({ type: Date })
+  expire_date: Date;
+
+  @Prop({ type: String, required: true })
+  query: string;
+
+  @Prop({ type: String, required: true })
+  paperId: string;
+
+  @Prop({ type: String, required: true })
+  answer: string;
+}
+export type ChatDocument = Chat & Document;
+export const ChatSchema = SchemaFactory.createForClass(Chat);
