@@ -19,6 +19,7 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 // Worker
 import { Worker } from '@react-pdf-viewer/core'; // install this library
+import { PaperChat } from '../../components/paper/chat'
 
 const PaperPage: NextPage = () => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
@@ -28,7 +29,6 @@ const PaperPage: NextPage = () => {
   const [paper, setPaper] = useState<{ [key: string]: any } | undefined>(undefined);
   const [showMinimal, setShowMinimal] = useState(false);
   const [showMinimalBar, setShowMinimalBar] = useState(false);
-  const [relatedPapers, setRelatedPapers] = useState<Array<{[key: string]: any}>>([]);
   const [explanation, setExplanation] = useState<[{order: number, sentence: string, value: number}] | null>(null);
 
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
@@ -38,7 +38,6 @@ const PaperPage: NextPage = () => {
 
   useEffect(() => {
     console.log(`paper or query changed: ${paperId}, ${query}`);
-    setRelatedPapers([]);
     setExplanation(null);
     if (paperId) {
       const PAPER_URL = new URL('paper', origin).toString();
@@ -46,18 +45,6 @@ const PaperPage: NextPage = () => {
         .then(response => {
           setPaper({ paperId, ...response.data.result });
           console.log(response.data.result);
-          const RELATE_URL = new URL('search', origin).toString();
-          axios.get(RELATE_URL, { params: { query: `${query} ${response.data.result['title']}`, limit: 6 } })
-            .then(response => {
-              const resArr: Array<{[key: string]: any}> = []
-              for (const res of response.data.result){
-                if (res.paperId === paperId) continue;
-                resArr.push(res)
-                if (resArr.length >= 5) break;
-              }
-              setRelatedPapers(resArr);
-              console.log(resArr);
-            });
         })
         .catch(error => {
           if (error.response.status === 404) {
@@ -113,7 +100,7 @@ const PaperPage: NextPage = () => {
             <div className="fixed flex items-center w-full h-[68px] border-b-[1px] border-gray-300 bg-white" /> : null
         }
 
-        <main className='flex flex-col show-logo:flex-row w-full items-center show-logo:items-start justify-center text-gray-600 px-5 gap-5 py-4'>
+        <main className='flex flex-col w-full items-center justify-center text-gray-600 px-5 gap-5 py-4'>
           {
             notFound ?
               <div className='flex flex-col w-full gap-10 py-20'>
@@ -123,43 +110,27 @@ const PaperPage: NextPage = () => {
                 </h3>
               </div> :
               <>
-                <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[950px] items-center gap-3 pt-5 show-logo:pt-0'>
+                <div className='flex flex-col w-full items-center gap-3 pt-5 show-logo:pt-0'>
                   <ul className='flex flex-col items-center justify-center w-full gap-3'>
-                    {(query !== undefined && paper !== undefined) ? <ResultPaper query={query} result={paper} explanation={explanation} /> : null}
+                    {(query !== undefined && paper !== undefined) ? <>
+                      {/* <ResultPaper query={query} result={paper} explanation={explanation} showLess={true} />  */}
+                      {/* <div className='flex flex-col items-center justify-center w-full p-3 border-[1px] gap-3 hover:shadow-md'> */}
+                      <h1 className="flex items-center justify-start text-left w-full px-1.5 text-2xl font-semibold pb-3 text-cyan-800 hover:underline">
+                        {paper['title']}
+                      </h1>
+                      {/* </div> */}
+                    </> : null}
                   </ul>
                 </div>
-                <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[300px] items-center gap-3'>
-                  <div className='flex flex-row w-full justify-center items-center gap-3'>
-                    <Link href={`/paper/read?paperId=${paperId}&query=${query}`} className='flex justify-center items-center h-12 w-full border-[1px] p-3 bg-cyan-800 text-white hover:bg-opacity-80 hover:shadow-md hover:underline'>
-                      Read and Chat
-                    </Link>
-                    <a href={paper ? paper["arxiv"] : ''} target="_blank" className='flex justify-center items-center h-12 w-full border-[1px] p-3 bg-red-800 text-white hover:bg-opacity-80 hover:shadow-md hover:underline'>
-                      ArXiv
-                    </a>
+                <div className='flex flex-row w-full h-[600px] items-center gap-3 mb-10'>
+                  <div className='flex flex-col w-full h-full'>
+                    {paper&&<><Worker workerUrl="https://unpkg.com/pdfjs-dist@3.5.141/build/pdf.worker.min.js">
+                      <Viewer fileUrl={paper["pdf"]}
+                        plugins={[defaultLayoutPluginInstance]} />
+                    </Worker></>}
+                    {!paper&&<>No pdf file selected</>}
                   </div>
-                  <div className='flex flex-col w-full justify-start items-start p-4 border-[1px] text-start hover:shadow-md'>
-                    <h3 className='pb-3'>Related Papers</h3>
-                    {
-                      relatedPapers && relatedPapers.length > 0 ?
-                      relatedPapers.map((res: { [key: string]: any }) => (
-                        <Link 
-                          href={`/paper?paperId=${res['paperId']}&query=${query} ${res['title']}`}
-                          className='p-3 w-full font-semibold text-cyan-800 hover:underline border-t-[1px]'
-                        >
-                          <h4>
-                            {res['title']}
-                          </h4>
-                        </Link>
-                      )) :
-                      Array(5).fill(
-                        <h4 className='flex flex-col pt-5 p-3 w-full font-semibold text-cyan-800 hover:underline border-t-[1px] gap-2'>
-                          <div className='w-11/12 h-4 bg-gray-200 animate-pulse rounded-full' />
-                          <div className='w-3/4 h-4 bg-gray-200 animate-pulse rounded-full' />
-                          <div className='w-4/5 h-4 bg-gray-200 animate-pulse rounded-full' />
-                        </h4>
-                      )
-                    }
-                  </div>
+                  <PaperChat paperId={paperId} />
                 </div>
               </>
           }
