@@ -13,7 +13,8 @@ import requests
 import urllib.request
 from time import sleep
 import pdfplumber
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import word_tokenize, sent_tokenize
+
 from datetime import datetime
 from utils.gpl_tsdae import GplTsdae
 import numpy as np
@@ -75,18 +76,20 @@ def get_paper_abstract(paper_id):
     return es_res["abstract"]
 
 def download_paper_and_save_as_txt(paper_id):
-    if os.path.exists(f"papers_txt/{paper_id}.txt"):
+    paper_id_file_name = paper_id.replace("/", "-*")
+    if os.path.exists(f"papers_txt/{paper_id_file_name}.txt"):
         return
     for try_count in range(6):
         try:
-            urllib.request.urlretrieve(f"https://export.arxiv.org/pdf/{paper_id}.pdf", f"./temp/{paper_id}.pdf")
+            print(f"https://export.arxiv.org/pdf/{paper_id}.pdf")
+            urllib.request.urlretrieve(f"https://export.arxiv.org/pdf/{paper_id}.pdf", f"./temp/{paper_id_file_name}.pdf")
             break
         except Exception as e:
             if try_count >= 5:
                 raise e
             print(f"{try_count}-retry, get {paper_id} in 10 seconds.")
             sleep(10)
-    pdfp = pdfplumber.open(f"./temp/{paper_id}.pdf")
+    pdfp = pdfplumber.open(f"./temp/{paper_id_file_name}.pdf")
     full_text = '\n'.join([page.extract_text() for page in pdfp.pages])
     tok = sent_tokenize(full_text)
     new_tok = []
@@ -94,9 +97,9 @@ def download_paper_and_save_as_txt(paper_id):
         score = sum([ c not in "+-*/=^(){}[]0123456789!@ " and ord(c) < 128 for c in s ]) / (len(s))
         if score >= 0.8:
             new_tok.append(s)
-    with open(f"papers_txt/{paper_id}.txt", "w") as f:
+    with open(f"papers_txt/{paper_id_file_name}.txt", "w") as f:
         f.write(' '.join(new_tok))
-    os.remove(f"./temp/{paper_id}.pdf")
+    os.remove(f"./temp/{paper_id_file_name}.pdf")
 
 gpl = GplTsdae()
 tokenizer = AutoTokenizer.from_pretrained("StabilityAI/stablelm-tuned-alpha-3b")
@@ -114,9 +117,10 @@ class StopOnTokens(StoppingCriteria):
 paper_txt_corpus_temp = {}
 
 def embed_paper_txt(paper_id):
+    paper_id_file_name = paper_id.replace("/", "-*")
     if paper_id in paper_txt_corpus_temp:
         return
-    with open(f"papers_txt/{paper_id}.txt", "r") as f:
+    with open(f"papers_txt/{paper_id_file_name}.txt", "r") as f:
         paper_txt = f.read()
     paper_ln = word_tokenize(paper_txt)
     paper_ln = [' '.join(paper_ln[i:i+wc]) for i in range(0, len(paper_ln), wc)]
