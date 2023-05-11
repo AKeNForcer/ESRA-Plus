@@ -28,7 +28,7 @@ const SearchPage: NextPage = () => {
   const [found409, setFound409] = useState<boolean>(false);
   const [overview, setOverview] = useState<[{overview: string, question: string}]| null>(null);
   const [question, setQuestion] = useState<[string]| null>(null);
-  const [factlist, setFactlist] = useState<[{type: string, entity: string, re: [string]}]| null>(null);
+  const [factlist, setFactlist] = useState<string | null>(null);
   
   const origin = process.env.NEXT_PUBLIC_DEV_URL ?? (
     typeof window !== 'undefined' && window.location.origin
@@ -149,18 +149,18 @@ const SearchPage: NextPage = () => {
         setHasMore(true);
         console.log("get overview");
         const OVERVIEW_URL = new URL('explain/overview', origin).toString();
-        axios.get(OVERVIEW_URL, { params: { query: query, wait: 45, gen: 1 } }).then(async response => {
+        axios.get(OVERVIEW_URL, { params: { query: query, wait: 60, gen: 1 } }).then(async response => {
           setOverview(response.data.result);
         });
         console.log("get question");
         const QUESTION_URL = new URL('explain/question', origin).toString();
-        axios.get(QUESTION_URL, { params: { query: query, wait: 45, gen: 1 } }).then(async response => {
+        axios.get(QUESTION_URL, { params: { query: query, wait: 60, gen: 1 } }).then(async response => {
           setQuestion(response.data.result);
           console.log('question', response.data.result);
         });
         console.log("get factlist");
         const FACTLIST_URL = new URL('explain/factlist', origin).toString();
-        axios.get(FACTLIST_URL, { params: { query: query } }).then(async response => {
+        axios.get(FACTLIST_URL, { params: { query: query, wait: 60, gen: 1 } }).then(async response => {
           setFactlist(response.data.result);
           console.log('factlist', response.data.result);
         });
@@ -281,25 +281,26 @@ const SearchPage: NextPage = () => {
             }
           </div>
           <div className='flex flex-col w-full max-w-[750px] show-logo:max-w-[500px] items-center gap-3'>
-            <div className='flex flex-col w-full items-start text-start justify-start p-4 border-[1px]'>
-              <h3 className='w-full pb-3'>Fact list</h3>
+            <div className='flex flex-col w-full justify-start text-start p-4 border-[1px]'>
+              <h3>Fact Lists</h3>
               {
-                factlist ?
-                <div className='flex flex-col w-full justify-start ml-3 pr-7'>
-                  {factlist.map((e) => <div className='flex flex-col justify-start items-start text-start border-t-[1px] pb-3 pt-1'>
-                    <div className='flex flex-wrap w-full p-2'>
-                      <div className='flex items-center justify-center px-1.5 h-7 rounded-lg border-[1px] text-xs'>{e.type}</div>
-                      &nbsp;
-                      <mark className='bg-transparent text-cyan-800 font-normal'>{e.entity}</mark>
-                    </div>
-                    {
-                      e.re.map((re) => <div className='text-start ml-10 font-extralight text-sm text-gray-600 mt-1'>
-                        &#x2022; {re}
-                      </div>)
-                    }
-                  </div>
-                  )}
-                </div> : null
+                factlist ? factlist.split("\n").map((e) => <>
+                  <p className='p-2 font-extralight text-sm'>{e}</p>
+                </>) : 
+                <div className="flex w-full animate-pulse">
+                  <h3 className='flex flex-col items-start justify-start text-left w-full px-1.5 text-base font-semibold pt-1.5 gap-2'>
+                    <div className="h-3 w-full bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-10/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-11/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-full bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-10/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-9/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-11/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-10/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-11/12 bg-gray-200 rounded-full"></div>
+                    <div className="h-3 w-1/3 bg-gray-200 rounded-full"></div>
+                  </h3>
+                </div>
               }
             </div>
             <div className='flex flex-col w-full justify-start text-start p-4 border-[1px]'>
