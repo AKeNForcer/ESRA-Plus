@@ -71,7 +71,7 @@ class ExplainService:
 
     def explain(self, query, abstract, join=False, verbose=False):
         prompt = f"Give me the relationship between the query and the abstract\nQuery: {query}\nContext: {abstract}"
-        ans, _ = self.llm.infer(prompt, max_new_tokens=128)
+        ans, _ = self.llm.infer(prompt, max_new_tokens=256)
         return ans
 
     def overview(self, query, documents):
@@ -83,7 +83,7 @@ class ExplainService:
     def factlist(self, query, documents):
         context = " ".join(documents).replace("\n", " ")
         prompt = f'Give 5 most important facts from the context relating to this query from 1 to 5 in a form of a list\nQuery: {query}\n Context: {context}'
-        ans, _ = self.llm.infer(prompt, max_new_tokens=192)
+        ans, _ = self.llm.infer(prompt, max_new_tokens=256)
         return ans
 
     def chat(self, query, paper_metadata, text_input, conv=None):
