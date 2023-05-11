@@ -13,6 +13,7 @@ services:
       MAIN_ELASTICSEARCH_PASS: esra_CP44
       PAPER_DOWNLOAD_URL: 'https://arxiv.org/pdf/{}.pdf'
       ARXIV_URL: 'https://arxiv.org/abs/{}'
+      PORT: 5000
     networks:
       - esra
       - esra-db-es
