@@ -58,6 +58,7 @@ explain_col = db["explanations"]
 overview_col = db["overviews"]
 question_col = db["questions"]
 chat_col = db["chats"]
+factlist_col = db["flists"]
 
 if DEVICE == 'cuda':
     exps = ExplainService(db)
@@ -113,17 +114,6 @@ def download_paper_and_save_as_txt(paper_id):
     os.remove(f"./temp/{paper_id_file_name}.pdf")
 
 gpl = GplTsdae()
-tokenizer = AutoTokenizer.from_pretrained("StabilityAI/stablelm-tuned-alpha-3b")
-model = AutoModelForCausalLM.from_pretrained("StabilityAI/stablelm-tuned-alpha-3b")
-model.half().cuda()
-
-class StopOnTokens(StoppingCriteria):
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
-        stop_ids = [50278, 50279, 50277, 1, 0]
-        for stop_id in stop_ids:
-            if input_ids[0][-1] == stop_id:
-                return True
-        return False
 
 paper_txt_corpus_temp = {}
 
@@ -138,35 +128,13 @@ def embed_paper_txt(paper_id):
     corpus = gpl.sbert.encode_corpus([ {'title': '', 'text': t} for t in paper_ln ])
     paper_txt_corpus_temp[paper_id] = (paper_ln, corpus)
 
-def get_paper_txt_text_input(paper_id, query):
+def get_paper_txt_text_input(paper_id, query, limit=4):
     paper_ln, corpus = paper_txt_corpus_temp[paper_id]
     scores = np.sum(np.repeat(gpl.sbert.encode_queries([query]), corpus.shape[0], axis=0) * corpus, axis=1)
-    raw_input = sorted(sorted(list(zip(scores, enumerate(paper_ln))), key=lambda x: -x[0])[:4], key=lambda x: x[1][0])
+    raw_input = sorted(sorted(list(zip(scores, enumerate(paper_ln))), key=lambda x: -x[0])[:limit], key=lambda x: x[1][0])
     real_input = [ t[1][1] for t in raw_input]
     return real_input
 
-def get_paper_chat_response(query, paper_metadata, text_input):
-    system_prompt = """<|SYSTEM|># StableLM Tuned (Alpha version)
-    - StableLM is a helpful and harmless open-source AI language model developed by StabilityAI.
-    - StableLM is excited to be able to help the user, but will refuse to do anything that could be considered harmful to the user.
-    - StableLM is more than just an information source, StableLM is also able to write poetry, short stories, and make jokes.
-    - StableLM will refuse to participate in anything that could harm a human.
-    """
-
-    prompt = f"{system_prompt}<|USER|>{query}\nThis is paper metadata.\n{paper_metadata}\nThis is text in the paper.\n{' '.join([f'{i}) {t}' for i, t in enumerate(text_input)])}<ans><|ASSISTANT|>"
-    # print(prompt)
-
-    inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
-    tokens = model.generate(
-        **inputs,
-        max_new_tokens=256,
-        temperature=0.7,
-        do_sample=True,
-        stopping_criteria=StoppingCriteriaList([StopOnTokens()]),
-        top_p = 0.95, top_k = 50, early_stopping = False
-    )
-
-    return tokenizer.decode(tokens[0], skip_special_tokens=True).split('<ans>')[-1]
 
 print("+++ model ready +++")
 
@@ -192,14 +160,9 @@ def gen_explain():
     except IndexError:
         return "not found"
 
-    explain_paragraph = exps.explain2(
-        query,
-        paper['abstract'] #f"( id: {paper['id']} | authors: {paper['authors']} | title: {paper['title']}) {paper['abstract']}"
-    )
-    # explanation = exps.highlight(query, explain_paragraph)
+    explain_paragraph = [exps.explain(query, paper['abstract'])]
     explanation = [dict(order=i+1, sentence=sen, value=0) for i, sen in enumerate(explain_paragraph)]
 
-    # exps.explain()
     explain_col.insert_one({
         "created_date": datetime.utcnow(),
         "expire_date": datetime.utcnow() + EXPIRE_DURATION,
@@ -209,37 +172,38 @@ def gen_explain():
     })
     return "success"
 
-# @app.route("/overview", methods=['POST'])
-# def gen_overview():
-#     query = request.json["query"]
-#     result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=5)).json()['result']
-#     overview_list = exps.overview(query, [r['abstract'] for r in result], similarity_threshold=2, num_return_sequences=1, verbose=False)
-#     overview_col.insert_one({
-#         "created_date": datetime.utcnow(),
-#         "expire_date": datetime.utcnow() + EXPIRE_DURATION,
-#         "query": query,
-#         "overview": ' '.join(overview_list)
-#     })
-#     return "success"
+@app.route("/factlist", methods=['POST'])
+def gen_factlist():
+    query = request.json["query"]
+    result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=3)).json()['result']
+    fact_list_res = exps.factlist(query, [r['abstract'] for r in result])
+    factlist_col.insert_one({
+        "created_date": datetime.utcnow(),
+        "expire_date": datetime.utcnow() + EXPIRE_DURATION,
+        "query": query,
+        "fact_list": fact_list_res,
+        # "documents": [r['abstract'] for r in result]
+    })
+    return "success"
 
 @app.route("/overview", methods=['POST'])
 def gen_overview():
     query = request.json["query"]
-    result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=5)).json()['result']
-    # overview_list = exps.overview_ner(query, result, verbose=False)
-    overview_list = exps.overview(query, [r['abstract'] for r in result], verbose=False)
+    result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=3)).json()['result']
+    overview_res = exps.overview(query, [r['abstract'] for r in result])
     overview_col.insert_one({
         "created_date": datetime.utcnow(),
         "expire_date": datetime.utcnow() + EXPIRE_DURATION,
         "query": query,
-        "overview": [dict(question=o[0], overview=o[1]) for o in overview_list]
+        "overview": [dict(question=query, overview=overview_res)],
+        # "documents": [r['abstract'] for r in result]
     })
     return "success"
 
 @app.route("/question", methods=['POST'])
 def gen_question():
     query = request.json["query"]
-    result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=5)).json()['result']
+    result = requests.get(os.path.join(BACKEND_URL, "search"), dict(query=query, limit=3)).json()['result']
     questions = exps.gen_question(query, [r['abstract'] for r in result], num_return_sequences=2, similarity_threshold=2, min_pass=5)
     question_col.insert_one({
         "created_date": datetime.utcnow(),
@@ -256,9 +220,9 @@ def chat_with_paper():
     query = request.json["query"]
     download_paper_and_save_as_txt(paper_id)
     embed_paper_txt(paper_id)
-    text_input = get_paper_txt_text_input(paper_id, query)
+    text_input = get_paper_txt_text_input(paper_id, query, limit=2)
     paper_metadata = get_paper_full(paper_id)
-    ans = get_paper_chat_response(query, paper_metadata, text_input)
+    ans, conv = exps.chat(query, paper_metadata, text_input)
     chat_col.insert_one({
         "created_date": datetime.utcnow(),
         "expire_date": datetime.utcnow() + EXPIRE_DURATION,

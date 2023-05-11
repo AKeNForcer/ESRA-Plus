@@ -33,8 +33,10 @@ export class PaperService {
             const res = await this.getPaper(paperId);
             return !(!res);
         } catch(error) {
-            if (error.response.status === HttpStatus.NOT_FOUND) {
+            if (error.response && error.response.status && error.response.status === HttpStatus.NOT_FOUND) {
                 return false;
+            } else {
+                throw error
             }
         }
     }

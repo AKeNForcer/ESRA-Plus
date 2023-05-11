@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.7.1-base-ubuntu20.04
+FROM nvidia/cuda:11.7.0-devel-ubuntu18.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -25,11 +25,27 @@ RUN pip install -r requirements.txt
 
 RUN pip install --upgrade elasticsearch==8.5.3
 
+RUN apt-get update -y && apt-get install git -y
+
 COPY . .
+
+RUN pip install -e ./utils/FastChat/
 
 ENV FLASK_ENV=production
 ENV FLASK_DEBUG=0
 
 RUN python ./utils/setup-nltk.py
 
-CMD ["python", "explain_worker.py"]
+# WORKDIR /esra/utils/FastChat/repositories/GPTQ-for-LLaMa
+
+# RUN python setup_cuda.py install
+
+# WORKDIR /esra
+
+# ENTRYPOINT ["cd", "/utils/FastChat/repositories/GPTQ-for-LLaMa/", "&&", "python", "setup_cuda.py", "install", "&&", "cd", "/esra"]
+
+# CMD ["python", "explain_worker.py"]
+
+ENV DISUTILS_USE_SDK=1
+
+CMD ["bash", "run.sh"]

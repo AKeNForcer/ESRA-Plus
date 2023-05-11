@@ -96,17 +96,28 @@ export class ExplainController {
     }
 
     @Get("/factlist")
-    async factlist(@Query() queries: FactlistDTO): Promise<object> {
-        const {query, limit} = queries;
-        if (limit) {
-            try {
-                parseInt(limit);
-            } catch (e) {
-                throw new HttpException(responseJson("limit must be integer", null, null, false), HttpStatus.BAD_REQUEST);
-            }
+    async getFList(@Query() queries: OverviewDTO): Promise<object> {
+        let { query, wait, gen } = queries;
+        wait = wait ? parseFloat(wait.toString()) : 0;
+        if (Number.isNaN(wait)) {
+            throw new HttpException(responseJson(`wait must be integer`, null, null, false), HttpStatus.BAD_REQUEST);
         }
-        const searchResult = await this.searchService.search(query, false, 5, 0);
-        const result = await this.explainService.getFactlist(searchResult.map((e) => e.paperId), limit ? parseInt(limit): 3);
+        if (wait >= 360 || wait < 0) {
+            throw new HttpException(responseJson(`wait (${wait}) must be in range [0, 360]`), HttpStatus.BAD_REQUEST);
+        }
+        gen = gen === '1';
+        if (gen) {
+            this.explainService.generateFList(query);
+        }
+        let result: string| null = null;
+        for (; !result && wait > 0; wait-=0.1) {
+            result = await this.explainService.getFList(query);
+            if (result) break;
+            await new Promise(r => setTimeout(r,100));
+        }
+        if (!result) {
+            throw new HttpException(responseJson("processing", null, null, false), HttpStatus.CONFLICT);
+        }
         return responseJson("success", result);
     }
 

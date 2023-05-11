@@ -1,0 +1,1 @@
+cd /esra/utils/FastChat/repositories/GPTQ-for-LLaMa && python setup_cuda.py install && cd /esra && python explain_worker.py

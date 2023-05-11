@@ -6,13 +6,14 @@ import { Cron } from '@nestjs/schedule';
 import { Model, Types } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
 import { SearchService } from 'src/search/search.service';
-import { Chat, ChatDocument, Explanation, ExplanationDocument, FactList, FactListDocument, Overview, OverviewDocument, Question, QuestionDocument } from './explain.model';
+import { Chat, ChatDocument, Explanation, ExplanationDocument, FactList, FactListDocument, FList, FListDocument, Overview, OverviewDocument, Question, QuestionDocument } from './explain.model';
 
 @Injectable()
 export class ExplainService {
     explainUrl: string;
     overviewUrl: string;
     factListUrl: string;
+    fListUrl: string;
     questionUrl: string;
     chatUrl: string;
     constructor (
@@ -23,11 +24,13 @@ export class ExplainService {
         @InjectModel(Overview.name) private overviewModel: Model<OverviewDocument>,
         @InjectModel(Question.name) private questionModel: Model<QuestionDocument>,
         @InjectModel(FactList.name) private factListModel: Model<FactListDocument>,
+        @InjectModel(FList.name) private fListModel: Model<FListDocument>,
         @InjectModel(Chat.name) private chatModel: Model<ChatDocument>) {
             this.explainUrl = new URL("explain", this.configService.get<string>('EXPLAIN_URL')).toString();
             this.overviewUrl = new URL("overview", this.explainUrl).toString();
             this.questionUrl = new URL("question", this.explainUrl).toString();
             this.factListUrl = new URL("factlist", this.explainUrl).toString();
+            this.fListUrl = new URL("factlist", this.explainUrl).toString();
             this.chatUrl = new URL("chat", this.explainUrl).toString();
         }
 
@@ -60,6 +63,20 @@ export class ExplainService {
         );
     }
 
+    async getFList(query: string): Promise<string | null> {
+        const flist = await this.fListModel.findOne({query}, {_id: 0, fact_list: 1});
+        return flist ? flist.fact_list : null;
+    }
+
+    async generateFList(query: string): Promise<void> {
+        if (await this.fListModel.exists({query})) {
+            return
+        }
+        await firstValueFrom(
+            this.httpService.post(this.fListUrl, [{query, rank: 5}])
+        );
+    }
+
     async getQuestion(query: string): Promise<[string] | null> {
         const question = await this.questionModel.findOne({query}, {_id: 0, questions: 1});
         return question ? question.questions : null;
@@ -74,29 +91,29 @@ export class ExplainService {
         );
     }
 
-    async getFactlist(paper_id_list, limit=3): Promise<{ entity: string; type: string; re: [string, string, string][] | string[]; }[]> {
-        const pre_factlists = await this.fetchFactlist(paper_id_list, limit);
-        return pre_factlists.map((ner) => {
-            ner.re = ner.re.map((re) => {
-                if (re[2] === 'FEATURE-OF') {
-                    return `is a feature of ${re[1]}`
-                } else if (re[2] === 'PART-OF') {
-                    return `is a part of ${re[1]}`
-                } else if (re[2] === 'EVALUATE-FOR') {
-                    return `evaluate for ${re[1]}`
-                } else if (re[2] === 'CONJUNCTION') {
-                    return `is a conjunction of ${re[1]}`
-                } else if (re[2] === 'USED-FOR') {
-                    return `is used for ${re[1]}`
-                } else if (re[2] === 'HYPONYM-OF') {
-                    return `is a hyponym of ${re[1]}`
-                } else {
-                    return `compare to ${re[1]}`
-                }
-            });
-            return ner;
-        });
-    }
+    // async getFactlist(paper_id_list, limit=3): Promise<{ entity: string; type: string; re: [string, string, string][] | string[]; }[]> {
+    //     const pre_factlists = await this.fetchFactlist(paper_id_list, limit);
+    //     return pre_factlists.map((ner) => {
+    //         ner.re = ner.re.map((re) => {
+    //             if (re[2] === 'FEATURE-OF') {
+    //                 return `is a feature of ${re[1]}`
+    //             } else if (re[2] === 'PART-OF') {
+    //                 return `is a part of ${re[1]}`
+    //             } else if (re[2] === 'EVALUATE-FOR') {
+    //                 return `evaluate for ${re[1]}`
+    //             } else if (re[2] === 'CONJUNCTION') {
+    //                 return `is a conjunction of ${re[1]}`
+    //             } else if (re[2] === 'USED-FOR') {
+    //                 return `is used for ${re[1]}`
+    //             } else if (re[2] === 'HYPONYM-OF') {
+    //                 return `is a hyponym of ${re[1]}`
+    //             } else {
+    //                 return `compare to ${re[1]}`
+    //             }
+    //         });
+    //         return ner;
+    //     });
+    // }
 
     async fetchFactlist(paper_id_list, limit=3): Promise<{ entity: string; type: string; re: [string, string, string][] | string[]; }[]> {
         return await this.factListModel.aggregate([
@@ -162,6 +179,7 @@ export class ExplainService {
         await Promise.all([
             this.explanationModel.deleteMany({ expire_date: { $lte: new Date() } }),
             this.overviewModel.deleteMany({ expire_date: { $lte: new Date() } }),
+            this.fListModel.deleteMany({ expire_date: { $lte: new Date() } }),
             this.questionModel.deleteMany({ expire_date: { $lte: new Date() } }),
             this.chatModel.deleteMany({ expire_date: { $lte: new Date() } }),
         ]);

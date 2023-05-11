@@ -40,6 +40,23 @@ export const OverviewSchema = SchemaFactory.createForClass(Overview);
 
 
 @Schema()
+export class FList {
+  @Prop({ default: new Date() })
+  created_date: Date;
+
+  @Prop({ type: Date })
+  expire_date: Date;
+
+  @Prop({ type: String, required: true, index: true })
+  query: string;
+
+  @Prop({ type: String, required: true })
+  fact_list: string;
+}
+export type FListDocument = FList & Document;
+export const FListSchema = SchemaFactory.createForClass(FList);
+
+@Schema()
 export class FactList {
   @Prop({ type: String, required: true })
   _id: string;

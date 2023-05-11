@@ -11,3 +11,4 @@ id.secret
 esra-explain-worker/temp/*
 esra-explain-worker/papers_txt/*
 esra-explain-worker/models/gpl/*
+esra-explain-worker/models/anon8231489123_vicuna-13b-GPTQ-4bit-128g/*
