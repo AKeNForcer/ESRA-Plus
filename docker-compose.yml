@@ -128,7 +128,8 @@ services:
     image: esra-explain-controller
     restart: always
     environment:
-      WORKERS_URL: '"http://explain-worker-0:5559/","http://explain-worker-1:5559/"'
+      # WORKERS_URL: '"http://explain-worker-0:5559/","http://explain-worker-1:5559/"'
+      WORKERS_URL: '"http://explain-worker-1:5559/"'
       WORK_LIMIT: 2
       PORT: 5559
     networks:

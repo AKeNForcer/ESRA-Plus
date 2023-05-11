@@ -129,7 +129,7 @@ export class ExplainController {
         if (gen) {
             this.explainService.generateChat(query, paperId);
         }
-        let result: string | null = null;
+        let result = null;
         for (; !result && wait > 0; wait-=0.1) {
             result = await this.explainService.getChat(query, paperId);
             if (result) break;
@@ -138,6 +138,7 @@ export class ExplainController {
         if (!result) {
             throw new HttpException(responseJson("processing", null, null, false), HttpStatus.CONFLICT);
         }
-        return responseJson("success", result);
+        const { answer, text_input } = result;
+        return responseJson("success", answer, {textInput: text_input});
     }
 }

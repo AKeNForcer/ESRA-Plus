@@ -92,6 +92,9 @@ export class Chat {
 
   @Prop({ type: String, required: true })
   answer: string;
+
+  @Prop({ type: Array, required: true })
+  text_input: string;
 }
 export type ChatDocument = Chat & Document;
 export const ChatSchema = SchemaFactory.createForClass(Chat);

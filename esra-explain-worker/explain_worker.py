@@ -75,6 +75,17 @@ def get_paper_abstract(paper_id):
     )["hits"]["hits"][0]['_source']
     return es_res["abstract"]
 
+def get_paper_full(paper_id):
+    es_res = main_es.search(
+        index="papers", 
+        query= {
+            "match_phrase": { "id": paper_id }
+        },
+        _source=True, 
+        size=1
+    )["hits"]["hits"][0]['_source']
+    return es_res
+
 def download_paper_and_save_as_txt(paper_id):
     paper_id_file_name = paper_id.replace("/", "-*")
     if os.path.exists(f"papers_txt/{paper_id_file_name}.txt"):
@@ -134,7 +145,7 @@ def get_paper_txt_text_input(paper_id, query):
     real_input = [ t[1][1] for t in raw_input]
     return real_input
 
-def get_paper_chat_response(query, text_input):
+def get_paper_chat_response(query, paper_metadata, text_input):
     system_prompt = """<|SYSTEM|># StableLM Tuned (Alpha version)
     - StableLM is a helpful and harmless open-source AI language model developed by StabilityAI.
     - StableLM is excited to be able to help the user, but will refuse to do anything that could be considered harmful to the user.
@@ -142,7 +153,7 @@ def get_paper_chat_response(query, text_input):
     - StableLM will refuse to participate in anything that could harm a human.
     """
 
-    prompt = f"{system_prompt}<|USER|>{query}\n{' '.join([f'{i}) {t}' for i, t in enumerate(text_input)])}<ans><|ASSISTANT|>"
+    prompt = f"{system_prompt}<|USER|>{query}\nThis is paper metadata.\n{paper_metadata}\nThis is text in the paper.\n{' '.join([f'{i}) {t}' for i, t in enumerate(text_input)])}<ans><|ASSISTANT|>"
     # print(prompt)
 
     inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
@@ -246,13 +257,15 @@ def chat_with_paper():
     download_paper_and_save_as_txt(paper_id)
     embed_paper_txt(paper_id)
     text_input = get_paper_txt_text_input(paper_id, query)
-    ans = get_paper_chat_response(query, text_input)
+    paper_metadata = get_paper_full(paper_id)
+    ans = get_paper_chat_response(query, paper_metadata, text_input)
     chat_col.insert_one({
         "created_date": datetime.utcnow(),
         "expire_date": datetime.utcnow() + EXPIRE_DURATION,
         "query": query,
         "paperId": paper_id,
-        "answer": ans
+        "answer": ans,
+        "text_input": text_input,
     })
     return "success"
 

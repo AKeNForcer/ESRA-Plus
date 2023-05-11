@@ -142,9 +142,9 @@ export class ExplainService {
         ])
     }
 
-    async getChat(query: string, paperId: string): Promise<string | null> {
-        const chatAns = await this.chatModel.findOne({query, paperId}, {_id: 0, answer: 1});
-        return chatAns ? chatAns.answer : null;
+    async getChat(query: string, paperId: string) {
+        const chatAns = await this.chatModel.findOne({query, paperId}, {_id: 0, answer: 1, text_input: 1});
+        return chatAns ? chatAns : null;
     }
 
     async generateChat(query: string, paperId: string): Promise<void> {
